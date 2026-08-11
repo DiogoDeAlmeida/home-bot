@@ -22,3 +22,4 @@ Une décision ne se modifie pas : elle se remplace par une nouvelle qui la super
 | [0012](0012-authentification-des-webhooks.md) | Jeton de webhook en en-tête, URL en repli | Acceptée |
 | [0013](0013-schema-partage-modules-et-hub.md) | Le hub décrit ses réglages avec la primitive des modules | Acceptée |
 | [0014](0014-demander-une-sauvegarde-nest-pas-la-piloter.md) | Demander une sauvegarde n'est pas la piloter | Acceptée |
+| [0015](0015-mediajourney-etat-derive.md) | `MediaJourney` est un état dérivé, jamais possédé | Acceptée |

@@ -21,8 +21,8 @@
     "noEmit": true,
     "skipLibCheck": true,
 
-    // TypeScript 7 a supprimé « baseUrl » : les chemins sont désormais résolus relativement
-    // à ce fichier.
+    // Chemins résolus relativement à ce fichier, sans « baseUrl » : la forme reste valide
+    // en TypeScript 6 comme en 7, si l'on décide un jour de basculer.
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "vite.config.ts"]

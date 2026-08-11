@@ -20,8 +20,8 @@ IP et son port, sans point d'entrée commun.
 | Service | Version | Emplacement |
 |---|---|---|
 | Seerr | 3.4.1 (post-renommage `seerr-team/seerr`) | `192.168.1.231:5055`, Debian 13 |
-| Radarr | **6.3.0.10514** | LXC 111, Debian 12 |
-| Sonarr | **4.0.19.2979** | LXC 110, Debian 12 |
+| Radarr | **6.3.0.10514** | `192.168.1.233:7878`, LXC 111, Debian 12 |
+| Sonarr | **4.0.19.2979** | `192.168.1.232:8989`, LXC 110, Debian 12 |
 | Prowlarr | — | LXC 114 |
 | qBittorrent | **5.1.0** | `192.168.1.240:8090`, derrière WireGuard/NordLynx |
 | Jellyfin | dernière | `192.168.1.208:8096` |
@@ -162,9 +162,12 @@ Chaque étape doit laisser le projet déployable et utilisable.
 
 | Manquant | Bloque | Échéance |
 |---|---|---|
-| IP de Radarr et Sonarr | étape 2 | avant le module média |
+| **Clés d'API Radarr, Sonarr et Seerr** | étape 2 | **maintenant** — sans elles, pas de capture de payloads réels |
 | Jeton Discord (application distincte de Doplarr) + ID du salon dashboard | étape 3 | avant l'adaptateur |
 | IP + jeton longue durée Home Assistant | étape 6+ | non pressé |
 | Champs Username/Password du webhook Radarr | rien | second facteur optionnel |
+
+La machine de développement est sur le LAN (`192.168.1.17`) et joint les quatre services : les
+fixtures de test seront capturées sur les instances réelles, puis anonymisées.
 
 Guild Discord : `1328010940041400370`.
