@@ -22,6 +22,46 @@ public sealed record MediaSnapshot(
                                                         or DownloadState.Importing));
 
     /// <summary>
+    /// Les parcours les plus dignes d'attention, triés et bornés.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Le classement vit ici, pas dans les adaptateurs.</b> Si chacun décidait de ce qui est
+    /// « intéressant », le message Discord et la page web afficheraient des choses différentes
+    /// du même instant — et la divergence ne se verrait qu'en les comparant côte à côte.
+    /// </para>
+    /// <para>
+    /// Critère : <b>ce qui va mal d'abord, puis ce qui est le plus proche d'aboutir.</b> Un
+    /// téléchargement bloqué mérite d'être vu avant un téléchargement sain à 3 % — le premier
+    /// demande une décision, le second demande de la patience.
+    /// </para>
+    /// <para>
+    /// <b>Un média déjà disponible est exclu</b>, sauf s'il demande une intervention. Ce filtre
+    /// n'est pas cosmétique : sans lui, un parcours disponible ayant par construction une
+    /// progression de 1,0, les médias terminés écrasent au tri tout ce qui télécharge. Constaté
+    /// en conditions réelles — sur 49 parcours dont un seul actif, le palmarès affichait cinq
+    /// médias à 100 % et masquait le seul téléchargement en cours.
+    /// </para>
+    /// <para>
+    /// Le palmarès peut donc compter moins de <paramref name="take"/> entrées, et c'est le
+    /// comportement voulu : mieux vaut une liste courte qu'une liste complétée par du bruit.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<MediaJourney> MostInteresting(int take) =>
+        [.. Journeys
+            .Where(j => j.NeedsAttention || j.State is JourneyState.Downloading
+                                                    or JourneyState.Importing)
+            .OrderByDescending(j => j.NeedsAttention)
+            // L'import passe avant le téléchargement : c'est ce qui est sur le point d'aboutir.
+            .ThenByDescending(j => j.State == JourneyState.Importing)
+            .ThenByDescending(j => j.Progress)
+            .ThenBy(j => j.Title, StringComparer.OrdinalIgnoreCase)
+            .Take(take)];
+
+    /// <summary>Parcours demandant une intervention.</summary>
+    public int AttentionCount => Journeys.Count(j => j.NeedsAttention);
+
+    /// <summary>
     /// Octets restants, agrégés correctement.
     /// </summary>
     /// <remarks>
@@ -60,7 +100,24 @@ public sealed record MediaJourney(
     IReadOnlyList<DownloadItem> Downloads,
     JourneyState State)
 {
-    /// <summary>Progression agrégée sur les octets, jamais sur une moyenne de pourcentages.</summary>
+    /// <summary>
+    /// Progression agrégée <b>sur les octets</b>, jamais en moyennant des pourcentages.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// La simplification tentante — <c>Downloads.Average(d => d.Progress)</c> — est fausse dès
+    /// que les téléchargements ont des tailles différentes, ce qui est le cas courant. Un pack
+    /// de 20 Go à 10 % et un épisode de 1 Go à 90 % donnent 50 % en moyenne de pourcentages,
+    /// alors qu'il reste 18,1 Go sur 21, soit 14 % réellement téléchargés. L'utilisateur qui
+    /// lit « 50 % » attendra deux fois moins longtemps que la réalité.
+    /// </para>
+    /// <para>
+    /// Un lecteur futur remplacera peut-être ce calcul par la moyenne, de bonne foi, en le
+    /// prenant pour une complication inutile. C'est pourquoi le test
+    /// <c>Requete_de_saison_resolue_en_episodes_separes_donne_N_telechargements_agreges</c>
+    /// vérifie une valeur que la moyenne ne produit pas.
+    /// </para>
+    /// </remarks>
     public double Progress
     {
         get
@@ -77,6 +134,27 @@ public sealed record MediaJourney(
 
     /// <summary>Débit cumulé, lu chez qBittorrent quand le torrent est connu.</summary>
     public long DownloadSpeed => Downloads.Sum(d => d.Torrent?.DownloadSpeed ?? 0);
+
+    /// <summary>
+    /// Ce parcours demande-t-il une intervention ?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Fondé sur les seuls faits dont la sémantique est établie : la santé rapportée par
+    /// <c>trackedDownloadStatus</c>, et un état terminal négatif ou indéterminé. Ni
+    /// <c>status</c>, ni <c>errorMessage</c>, ni <c>statusMessages</c> n'entrent ici — le
+    /// premier vaut <c>warning</c> dès la première seconde, et les deux autres n'ont pas encore
+    /// été observés sur un cas réellement bloqué (ADR-0015).
+    /// </para>
+    /// <para>
+    /// Ce n'est <b>pas</b> le moteur d'anomalies : il n'y a ni seuil de durée, ni déduplication,
+    /// ni mise en sommeil. C'est un critère de tri, destiné à faire remonter en tête ce qui
+    /// mérite un regard. Le moteur viendra à l'étape 4 et pourra enrichir ce signal.
+    /// </para>
+    /// </remarks>
+    public bool NeedsAttention =>
+        State is JourneyState.Failed or JourneyState.Unresolved
+        || Downloads.Any(d => d.Health is DownloadHealth.Warning or DownloadHealth.Error);
 }
 
 /// <summary>

@@ -1,7 +1,9 @@
 using System.Net;
 using HomelabHub.Abstractions.Configuration;
 using HomelabHub.Abstractions.Modules;
+using HomelabHub.Modules.Media.Capabilities;
 using HomelabHub.Modules.Media.Clients;
+using HomelabHub.Modules.Media.Correlation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HomelabHub.Modules.Media;
@@ -73,5 +75,12 @@ public sealed class MediaModule : IHubModule
                        client.DefaultRequestHeaders.Referrer = baseAddress;
                    }
                });
+
+        context.AddState(MediaSnapshot.Empty)
+               .AddPoller<MediaPoller>(TimeSpan.FromSeconds(60), PollIntervalKey)
+               .AddHealthCheck<MediaHealthCheck>()
+               .AddCapability<QueueOverviewCapability>()
+               .AddCapability<QueueDetailCapability>()
+               .AddWidget<MediaWidget>();
     }
 }
