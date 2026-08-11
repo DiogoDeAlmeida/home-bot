@@ -67,7 +67,7 @@ public sealed class ModuleIsolationTests
     {
         var moduleAssemblies = new[]
         {
-            Modules.SystemModule.SystemModuleAssembly.Value,
+            Modules.SystemInfo.SystemModuleAssembly.Value,
             Modules.Media.MediaModuleAssembly.Value,
         };
 

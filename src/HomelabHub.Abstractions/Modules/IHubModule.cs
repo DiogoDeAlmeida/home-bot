@@ -21,7 +21,7 @@ namespace HomelabHub.Abstractions.Modules;
 /// les capacités et de router les widgets. Voir ADR-0002.
 /// </para>
 /// </remarks>
-public interface IHubModule
+public interface IHubModule : Configuration.IHubModuleMarker
 {
     /// <summary>
     /// Identifiant stable du module : minuscules, <c>[a-z0-9-]</c>, 20 caractères maximum.

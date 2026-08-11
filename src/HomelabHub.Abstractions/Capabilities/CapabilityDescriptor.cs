@@ -74,7 +74,12 @@ public enum CapabilityExposure
 /// exactement la place à <see cref="SubGroup"/> et <see cref="Name"/>. Une racine commune
 /// <c>/hub</c> ferait un niveau de trop.
 /// </remarks>
-/// <param name="SubGroup">Groupe de sous-commandes : <c>queue</c> dans <c>/media queue pause</c>.</param>
+/// <param name="SubGroup">
+/// Groupe de sous-commandes : <c>queue</c> dans <c>/media queue pause</c>. <c>null</c> pour
+/// rattacher la sous-commande directement à la racine — <c>/system disk</c> n'a pas besoin
+/// d'un groupe intermédiaire, et Discord accepte qu'une commande mélange sous-commandes et
+/// groupes au même niveau.
+/// </param>
 /// <param name="Name">Sous-commande : <c>pause</c> dans <c>/media queue pause</c>.</param>
 /// <param name="Ephemeral">Réponse visible du seul appelant. À privilégier pour tout ce qui est verbeux.</param>
 /// <param name="RequireConfirmation">
@@ -82,7 +87,7 @@ public enum CapabilityExposure
 /// rôle induit par <see cref="CapabilityKind.Mutation"/>, pour les opérations destructrices.
 /// </param>
 public sealed record DiscordBinding(
-    string SubGroup,
+    string? SubGroup,
     string Name,
     bool Ephemeral = false,
     bool RequireConfirmation = false);

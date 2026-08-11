@@ -61,6 +61,12 @@ dotnet_naming_style.prefix_i.capitalization = pascal_case
 dotnet_diagnostic.CA2007.severity = none
 # CA1848 (LoggerMessage) : à réévaluer si le logging devient un point chaud.
 dotnet_diagnostic.CA1848.severity = none
+# CA1873 (argument de log potentiellement coûteux) : même famille que CA1848. La règle
+# signale toute lecture de propriété passée à un log — juste dans une boucle chaude, à côté
+# partout ailleurs. Rétrogradée en suggestion, visible mais non bloquante, plutôt que
+# convertir tout le projet aux méthodes générées [LoggerMessage]. À revoir si le logging
+# devient un point chaud mesuré.
+dotnet_diagnostic.CA1873.severity = suggestion
 # CA2016 : propager le CancellationToken. Non négociable — cf. conventions §14.
 dotnet_diagnostic.CA2016.severity = error
 

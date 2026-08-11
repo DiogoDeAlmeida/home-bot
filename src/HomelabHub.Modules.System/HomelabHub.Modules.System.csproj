@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>HomelabHub.Modules.SystemModule</RootNamespace>
+    <!-- Volontairement pas « HomelabHub.Modules.System » : à l'intérieur d'un tel espace de
+         noms, C# résout « System.IO » en « HomelabHub.Modules.System.IO » et tout casse de
+         façon incompréhensible. Le nom d'assembly, lui, reste aligné sur le projet. -->
+    <RootNamespace>HomelabHub.Modules.SystemInfo</RootNamespace>
   </PropertyGroup>
 
   <!-- RÈGLE STRUCTURANTE (ADR-0010) : un module ne référence QUE HomelabHub.Abstractions.

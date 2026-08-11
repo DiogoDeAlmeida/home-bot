@@ -5,8 +5,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
     <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HomelabHub.Infrastructure.Tests" />
   </ItemGroup>
 
 </Project>

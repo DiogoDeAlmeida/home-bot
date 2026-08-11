@@ -33,8 +33,41 @@ cycle de vie explicite :
 comportement attendu d'un détecteur : c'est ainsi que le noyau sait que l'anomalie dure
 toujours. Il n'en découle aucune notification.
 
-Une anomalie est **résolue** quand elle cesse d'être republiée pendant un délai de grâce, ce
-qui déclenche une notification de clôture.
+Une anomalie est **résolue** quand elle cesse d'être republiée, ce qui déclenche une
+notification de clôture.
+
+## Un détecteur est une projection sans état, pas un émetteur
+
+C'est le corollaire qui fait tenir tout le reste, et il mérite d'être explicite.
+
+Un détecteur ne dit jamais « ferme telle anomalie ». Il repart du snapshot courant à chaque
+cycle et republie **l'ensemble de ce qui va mal en ce moment**. Le noyau compare au cycle
+précédent et en déduit les ouvertures et les clôtures.
+
+Conséquence pratique, sur le cas « release remplacée par une meilleure » : quand Radarr
+abandonne une release, l'ancien `downloadId` disparaît de la file, donc du snapshot, donc de
+ce que le détecteur republie. L'anomalie se clôt d'elle-même. **Aucune correspondance
+`DedupeKey` → `DownloadItem` n'est à tenir**, ni par le module, ni par le contrat. Un module
+qui tiendrait cette table dupliquerait le noyau et finirait par diverger de lui.
+
+## La réconciliation est portée par un cycle réussi
+
+La règle « ce qui n'est plus republié est résolu » n'est correcte que si l'absence est
+significative. Si `PollAsync` lève une exception à mi-parcours, une partie des anomalies
+disparaîtrait et serait déclarée résolue à tort — un service injoignable se traduirait par une
+salve de « tout va bien » au lieu d'une alerte.
+
+Le noyau possède les bornes du cycle : il ouvre la fenêtre en appelant `IModulePoller.PollAsync`
+et la ferme **au retour sans exception**. La réconciliation n'a lieu qu'alors. En cas d'échec,
+les anomalies actives restent ouvertes en l'état.
+
+Aucun changement de contrat n'est nécessaire : `IEventPublisher` reste inchangé, et les modules
+n'ont rien à savoir de ce mécanisme.
+
+> **Point ouvert (étape 4).** Un module qui n'aurait que des webhooks, sans aucun poller, n'a
+> pas de cycle, donc pas de fenêtre de réconciliation. Aucun module prévu n'est dans ce cas —
+> Home Assistant conserve un poller REST de repli. Si le cas se présente, la réponse sera une
+> publication d'ensemble explicite, pas un délai de grâce temporel.
 
 ## Mise en sommeil
 

@@ -4,8 +4,9 @@ Point d'entrée unifié d'un homelab familial sous Proxmox : un service auto-hé
 agrège les services existants et expose leurs capacités **à la fois** via un bot Discord et
 une interface web locale.
 
-> **État : étape 0 — squelette.** La solution compile, la CI tourne, les contrats sont posés.
-> Rien de fonctionnel n'est encore implémenté.
+> **État : étape 1 en cours.** Le noyau, le module `system` et la sauvegarde intégrée
+> fonctionnent, derrière un compte administrateur. Restent à faire pour clore l'étape :
+> SQLite et EF Core, l'interface React, l'adaptateur Discord (étape 3).
 
 ## Pourquoi
 
@@ -60,9 +61,28 @@ dotnet test
 dotnet run --project src/HomelabHub.Host
 ```
 
+## API
+
+Toute l'API est verrouillée tant que `POST /api/setup` n'a pas défini de mot de passe
+administrateur, puis exige un cookie de session.
+
+| Route | Rôle |
+|---|---|
+| `GET /healthz` | Sonde de disponibilité, anonyme |
+| `GET`/`POST /api/setup` | Assistant de premier démarrage |
+| `POST /api/auth/login` · `/logout` · `GET /me` | Session administrateur |
+| `GET /api/modules` | Modules, activation, configuration complète ou non |
+| `POST /api/modules/{clé}/enabled` | Activer ou désactiver, sans redémarrage |
+| `GET`/`PUT /api/modules/{clé}/config` | Schéma et valeurs, secrets masqués en lecture |
+| `GET /api/modules/{clé}/health` | Sonde du module |
+| `GET /api/capabilities` | Capacités exposées en REST |
+| `POST /api/capabilities/{clé}` | Exécuter une capacité |
+| `GET /api/journal` | Derniers événements |
+
 ## Documentation
 
 - [Cadrage](docs/00-cadrage.md) — genèse, arbitrages, périmètre, roadmap
+- [Ajouter un module](docs/02-ajouter-un-module.md) — le guide qui sert de test à l'abstraction
 - [Décisions d'architecture](docs/adr/) — le *pourquoi* de chaque choix structurant
 
 ## Licence
