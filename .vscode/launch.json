@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Hub (API sur :8080)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/HomelabHub.Host/bin/Debug/net10.0/homelabhub.dll",
+      "cwd": "${workspaceFolder}/src/HomelabHub.Host",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development",
+        // Données et configuration hors de l'arborescence source, et ignorées par git.
+        // Supprimer .local/ suffit à repartir d'un hub vierge, assistant compris.
+        "Hub__DataDirectory": "${workspaceFolder}/.local/data",
+        "Hub__ConfigDirectory": "${workspaceFolder}/.local/config"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Hub + interface",
+      "configurations": ["Hub (API sur :8080)"],
+      "preLaunchTask": "web: dev",
+      "stopAll": true
+    }
+  ]
+}

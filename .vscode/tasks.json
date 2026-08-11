@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "dotnet build HomelabHub.sln",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "dotnet test HomelabHub.sln",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "web: installer",
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}/web-ui" },
+      "problemMatcher": []
+    },
+    {
+      "label": "web: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/web-ui" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^$file$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "ready in"
+        }
+      },
+      "presentation": { "group": "hub" }
+    },
+    {
+      "label": "web: verifier les types",
+      "type": "shell",
+      "command": "npm run typecheck",
+      "options": { "cwd": "${workspaceFolder}/web-ui" },
+      "problemMatcher": []
+    },
+    {
+      "label": "hub: publier (front inclus)",
+      "type": "shell",
+      "command": "dotnet publish src/HomelabHub.Host -c Release -o .local/publish",
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

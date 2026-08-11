@@ -1,0 +1,27 @@
+{
+  // Tailwind 4 n'a plus de tailwind.config.js : la configuration est dans le CSS.
+  // Sans ces deux réglages, l'extension ne propose aucune complétion.
+  "tailwindCSS.experimental.configFile": "web-ui/src/index.css",
+  "tailwindCSS.includeLanguages": { "typescriptreact": "javascript" },
+  "css.customData": [],
+  "css.lint.unknownAtRules": "ignore",
+
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    ".local": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "src/HomelabHub.Host/wwwroot": true
+  },
+
+  "[csharp]": { "editor.formatOnSave": true },
+  "[typescript]": { "editor.formatOnSave": true },
+  "[typescriptreact]": { "editor.formatOnSave": true },
+
+  "dotnet.defaultSolution": "HomelabHub.sln"
+}

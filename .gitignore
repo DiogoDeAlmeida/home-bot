@@ -11,6 +11,7 @@ artifacts/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/launch.json
+!.vscode/settings.json
 !.vscode/tasks.json
 .idea/
 *.sln.docstates
@@ -27,6 +28,8 @@ src/HomelabHub.Host/wwwroot/
 
 # ---- Données locales de développement ----
 # Jamais de base, de keyring Data Protection ou de configuration dans le dépôt.
+# .local/ reçoit les données et la configuration quand on lance le hub depuis VS Code.
+.local/
 *.db
 *.db-shm
 *.db-wal
