@@ -95,11 +95,69 @@ d'abord progressé (`sizeleft < size`) ou s'il dure depuis un délai de grâce c
 échantillons espacés de 5 s ; le film n'y a jamais été vu. Avec des hardlinks, l'import est
 quasi instantané.
 
-Conséquence : **on ne détecte pas un import bloqué en cherchant `importPending` au polling.**
-À 60 secondes d'intervalle, on ne le voit jamais dans le cas nominal. La logique est donc
-inversée : *voir* `importPending` sur un cycle est déjà en soi le signal, sans seuil de durée.
-Ce qui confirme le choix de câbler l'anomalie sur le déclencheur `Manual Interaction Required`
-plutôt que sur un `importPending` qui traîne.
+> ### Pourquoi la règle qui suit paraîtra fausse
+>
+> **Règle : voir `importPending` sur un cycle de polling est en soi le signal d'anomalie.
+> Il n'y a pas de seuil de durée.**
+>
+> Cette formulation est contre-intuitive au point qu'un lecteur futur la prendra pour un bug et
+> la « corrigera » en ajoutant un seuil. Voici le raisonnement, pour qu'il ne le fasse pas.
+>
+> L'intuition dit : « `importPending` est un état transitoire normal, donc il faut mesurer
+> depuis combien de temps il dure avant de crier ». C'est le raisonnement qu'on applique à un
+> téléchargement bloqué, et il est juste **là-bas**.
+>
+> Il est faux ici parce que la fenêtre nominale — moins de cinq secondes — est **plus courte que
+> l'intervalle d'échantillonnage**, qui est de soixante secondes. Un import qui se passe bien
+> n'est donc jamais observé du tout. La probabilité de tomber dessus par hasard est d'environ un
+> cycle sur douze, et elle tend vers zéro à mesure que l'import est rapide.
+>
+> Autrement dit : le polling ne voit `importPending` que quand il *persiste*. Le seuil de durée
+> est déjà appliqué, gratuitement, par l'échantillonnage lui-même. En rajouter un explicite
+> reviendrait à l'appliquer deux fois et à retarder la détection sans rien gagner.
+>
+> **Ce qui invaliderait ce raisonnement**, et devrait alors faire réintroduire un seuil : un
+> intervalle de polling descendu à quelques secondes, ou un stockage sans hardlinks — copie
+> réelle entre volumes distincts — où l'import légitime durerait des minutes.
+
+Ce raisonnement confirme le choix de câbler l'anomalie sur le déclencheur
+`Manual Interaction Required` plutôt que sur un `importPending` qui traîne.
+
+**3. Méfiance à étendre à `statusMessages`.** `errorMessage` de Radarr n'est pas une erreur : c'est
+un état transitoire que l'API expose sans le qualifier. Rien ne dit que `statusMessages` se
+comporte mieux. **Ne pas présumer qu'un message non vide signifie un problème** tant que le cas
+d'un import réellement bloqué n'aura pas été observé.
+
+En attendant cette observation, la détection s'appuie sur le seul signal dont la sémantique est
+établie : `trackedDownloadStatus` différent de `ok`, traité génériquement en avertissement ou en
+erreur, sans interpréter le contenu des messages.
+
+## L'état terminal vient de l'historique, pas de la file
+
+Le cycle observé se termine par la **disparition** de l'entrée de file. Or une entrée disparaît
+aussi bien après un import réussi qu'après une suppression manuelle ou un échec. Sans source
+complémentaire, un `MediaJourney` resterait indéfiniment indéterminé après cette disparition —
+et la tentation serait alors de mémoriser son dernier état connu, ce qui contredirait tout cet ADR.
+
+**`/api/v3/history` répond, et l'API filtre côté serveur :**
+
+```
+GET /api/v3/history?downloadId=A52239F7…   →  2 enregistrements
+     grabbed                 2026-08-11T19:25:19Z
+     downloadFolderImported  2026-08-11T19:37:01Z
+```
+
+Les types d'événements pertinents sont `grabbed`, `downloadFolderImported`, `downloadFailed` et
+`downloadIgnored` ; les deux derniers ne se sont pas produits pendant la capture et restent à
+observer. La duplication par épisode s'y retrouve à l'identique — 44 événements pour un pack de
+saison — donc le même regroupement par `downloadId` s'applique.
+
+**Cela ne fragilise pas la décision, cela la renforce :** l'état terminal reste *dérivé*, lu
+chez le service, jamais mémorisé par le hub. Un redémarrage continue de ne rien perdre.
+
+**Conséquence sur l'implémentation :** l'historique est une source de la corrélation dès le
+premier jour, pas un ajout ultérieur. Une page récente d'historique est lue une fois par cycle
+et indexée par `downloadId` — et non une requête par parcours, qui ferait N appels par cycle.
 
 ## Corollaire : ne pas s'appuyer sur la corrélation de Seerr
 

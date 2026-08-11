@@ -1,1 +1,157 @@
-{"page":1,"pageSize":100,"sortKey":"timeleft","sortDirection":"descending","totalRecords":1,"records":{"movieId":49,"movie":{"title":"Exemple.Media.1.2024.1080p.WEB-DL-GROUPE","originalTitle":"Exemple.Media.1.2024.1080p.WEB-DL-GROUPE","originalLanguage":{"id":1,"name":"Exemple.Media.2.2024.1080p.WEB-DL-GROUPE"},"alternateTitles":{"sourceType":"tmdb","movieMetadataId":100,"title":"Exemple.Media.3.2024.1080p.WEB-DL-GROUPE","id":835},"secondaryYearSourceId":0,"sortTitle":"Exemple.Media.1.2024.1080p.WEB-DL-GROUPE","status":"released","overview":"Exemple.Media.4.2024.1080p.WEB-DL-GROUPE","inCinemas":"2026-03-04T00:00:00Z","physicalRelease":"2026-06-02T00:00:00Z","digitalRelease":"2026-04-28T00:00:00Z","releaseDate":"2026-04-28T00:00:00Z","images":[{"coverType":"poster","remoteUrl":"Exemple.Media.5.2024.1080p.WEB-DL-GROUPE"},{"coverType":"fanart","remoteUrl":"Exemple.Media.6.2024.1080p.WEB-DL-GROUPE"}],"website":"Exemple.Media.7.2024.1080p.WEB-DL-GROUPE","year":2026,"youTubeTrailerId":"Exemple.Media.8.2024.1080p.WEB-DL-GROUPE","studio":"Pixar","path":"Exemple.Media.9.2024.1080p.WEB-DL-GROUPE","qualityProfileId":5,"movieFileId":0,"monitored":true,"minimumAvailability":"released","isAvailable":true,"folderName":"Exemple.Media.9.2024.1080p.WEB-DL-GROUPE","runtime":104,"cleanTitle":"Exemple.Media.1.2024.1080p.WEB-DL-GROUPE","imdbId":"tt26443616","tmdbId":1327819,"titleSlug":"exemple-titre-1","certification":"PG","genres":["Adventure","Animation","Comedy","Family","Science Fiction"],"keywords":["3d animation","aftercreditsstinger","amused","beaver","bold","consciousness","duringcreditsstinger","enthusiastic","human becoming an animal","human vs nature","mischievous","oregon, usa","robotic animal","spy","transhumanism"],"tags":null,"added":"2026-08-11T19:25:16Z","ratings":{"imdb":{"votes":79747,"value":7.2,"type":"user"},"tmdb":{"votes":2145,"value":8.181,"type":"user"},"metacritic":{"votes":0,"value":73,"type":"user"},"rottenTomatoes":{"votes":0,"value":94,"type":"user"},"trakt":{"votes":9261,"value":7.94115,"type":"user"}},"popularity":67.3478,"lastSearchTime":"2026-08-11T19:25:17Z","id":49},"languages":{"id":2,"name":"Exemple.Media.11.2024.1080p.WEB-DL-GROUPE"},"quality":{"quality":{"id":19,"name":"Exemple.Media.12.2024.1080p.WEB-DL-GROUPE","source":"bluray","resolution":2160,"modifier":"none"},"revision":{"version":2,"real":0,"isRepack":false}},"customFormats":null,"customFormatScore":0,"size":12712606822,"title":"Exemple.Media.13.2024.1080p.WEB-DL-GROUPE","estimatedCompletionTime":"2026-08-11T19:49:59Z","added":"2026-08-11T19:25:19Z","status":"downloading","trackedDownloadStatus":"ok","trackedDownloadState":"downloading","statusMessages":null,"downloadId":"6565656565656565656565656565656565656565","protocol":"torrent","downloadClient":"qBittorrent","downloadClientHasPostImportCategory":false,"indexer":"Exemple.Media.14.2024.1080p.WEB-DL-GROUPE","sizeleft":12390792294,"timeleft":"00:21:59","id":1726468007}}
+{
+  "page": 1,
+  "pageSize": 100,
+  "sortKey": "timeleft",
+  "sortDirection": "descending",
+  "totalRecords": 1,
+  "records": [
+    {
+      "movieId": 49,
+      "movie": {
+        "title": "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
+        "originalTitle": "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
+        "originalLanguage": {
+          "id": 1,
+          "name": "Exemple.Media.99.2024.1080p.WEB-DL-GROUPE"
+        },
+        "alternateTitles": [
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 100,
+            "title": "Exemple.Media.103.2024.1080p.WEB-DL-GROUPE",
+            "id": 835
+          }
+        ],
+        "secondaryYearSourceId": 0,
+        "sortTitle": "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
+        "status": "released",
+        "overview": "Exemple.Media.107.2024.1080p.WEB-DL-GROUPE",
+        "inCinemas": "2026-03-04T00:00:00Z",
+        "physicalRelease": "2026-06-02T00:00:00Z",
+        "digitalRelease": "2026-04-28T00:00:00Z",
+        "releaseDate": "2026-04-28T00:00:00Z",
+        "images": [
+          {
+            "coverType": "poster",
+            "remoteUrl": "Exemple.Media.111.2024.1080p.WEB-DL-GROUPE"
+          },
+          {
+            "coverType": "fanart",
+            "remoteUrl": "Exemple.Media.112.2024.1080p.WEB-DL-GROUPE"
+          }
+        ],
+        "website": "Exemple.Media.109.2024.1080p.WEB-DL-GROUPE",
+        "year": 2026,
+        "youTubeTrailerId": "Exemple.Media.110.2024.1080p.WEB-DL-GROUPE",
+        "studio": "Pixar",
+        "path": "Exemple.Media.106.2024.1080p.WEB-DL-GROUPE",
+        "qualityProfileId": 5,
+        "movieFileId": 0,
+        "monitored": true,
+        "minimumAvailability": "released",
+        "isAvailable": true,
+        "folderName": "Exemple.Media.106.2024.1080p.WEB-DL-GROUPE",
+        "runtime": 104,
+        "cleanTitle": "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
+        "imdbId": "tt26443616",
+        "tmdbId": 1327819,
+        "titleSlug": "Exemple.Media.108.2024.1080p.WEB-DL-GROUPE",
+        "certification": "PG",
+        "genres": [
+          "Adventure",
+          "Animation",
+          "Comedy",
+          "Family",
+          "Science Fiction"
+        ],
+        "keywords": [
+          "3d animation",
+          "aftercreditsstinger",
+          "amused",
+          "beaver",
+          "bold",
+          "consciousness",
+          "duringcreditsstinger",
+          "enthusiastic",
+          "human becoming an animal",
+          "human vs nature",
+          "mischievous",
+          "oregon, usa",
+          "robotic animal",
+          "spy",
+          "transhumanism"
+        ],
+        "tags": [],
+        "added": "2026-08-11T19:25:16Z",
+        "ratings": {
+          "imdb": {
+            "votes": 79747,
+            "value": 7.2,
+            "type": "user"
+          },
+          "tmdb": {
+            "votes": 2145,
+            "value": 8.181,
+            "type": "user"
+          },
+          "metacritic": {
+            "votes": 0,
+            "value": 73,
+            "type": "user"
+          },
+          "rottenTomatoes": {
+            "votes": 0,
+            "value": 94,
+            "type": "user"
+          },
+          "trakt": {
+            "votes": 9261,
+            "value": 7.94115,
+            "type": "user"
+          }
+        },
+        "popularity": 67.3478,
+        "lastSearchTime": "2026-08-11T19:25:17Z",
+        "id": 49
+      },
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.100.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 19,
+          "name": "Exemple.Media.101.2024.1080p.WEB-DL-GROUPE",
+          "source": "bluray",
+          "resolution": 2160,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 2,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "size": 12712606822,
+      "title": "Exemple.Media.104.2024.1080p.WEB-DL-GROUPE",
+      "estimatedCompletionTime": "2026-08-11T19:49:59Z",
+      "added": "2026-08-11T19:25:19Z",
+      "status": "downloading",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E",
+      "protocol": "torrent",
+      "downloadClient": "qBittorrent",
+      "downloadClientHasPostImportCategory": false,
+      "indexer": "Exemple.Media.105.2024.1080p.WEB-DL-GROUPE",
+      "sizeleft": 12390792294,
+      "timeleft": "00:21:59",
+      "id": 1726468007
+    }
+  ]
+}

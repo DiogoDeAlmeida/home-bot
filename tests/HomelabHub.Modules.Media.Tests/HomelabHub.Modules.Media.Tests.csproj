@@ -16,7 +16,14 @@
     <ProjectReference Include="..\..\src\HomelabHub.Modules.Media\HomelabHub.Modules.Media.csproj" />
   </ItemGroup>
 
-  <!-- WireMock.Net sera ajouté à l'étape 3, avec des réponses capturées sur l'installation
-       cible (Radarr 6.3.0, Sonarr 4.0.19, Seerr 3.4.1, qBittorrent 5.1.0) et anonymisées. -->
+  <!-- Les fixtures sont copiées à côté de l'assembly de test : les tests désérialisent les
+       vraies réponses des services, pas des mocks écrits à la main. -->
+  <ItemGroup>
+    <Content Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- WireMock.Net viendra quand il faudra éprouver le comportement HTTP du client lui-même —
+       délais, réessais, 403 de qBittorrent. Pour la forme des réponses, les fixtures suffisent
+       et sont plus fidèles. -->
 
 </Project>

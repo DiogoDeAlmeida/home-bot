@@ -4,6 +4,7 @@ using HomelabHub.Core.Configuration;
 using HomelabHub.Host.Api;
 using HomelabHub.Host.Auth;
 using HomelabHub.Infrastructure;
+using HomelabHub.Modules.Media;
 using HomelabHub.Modules.SystemInfo;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -30,8 +31,10 @@ builder.Services.AddSingleton(logLevel);
 builder.Services.AddHubInfrastructure(builder.Configuration);
 
 // Tous les modules sont enregistrés, activés ou non : le conteneur est immuable après
-// Build(), l'activation est un état runtime (ADR-0002).
-builder.Services.AddHubCore(new SystemModule());
+// Build(), l'activation est un état runtime (ADR-0002). Le module média est déclaré avant
+// d'être fonctionnel : il expose son schéma, donc son formulaire, et se signale lui-même
+// comme inactif tant que ses clés d'API ne sont pas saisies.
+builder.Services.AddHubCore(new SystemModule(), new MediaModule());
 
 builder.Services.AddSingleton<AdminAccount>();
 

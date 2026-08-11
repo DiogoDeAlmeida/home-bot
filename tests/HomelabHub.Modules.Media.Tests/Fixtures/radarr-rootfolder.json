@@ -1,11 +1,15 @@
-{
-    "path":  "Exemple.Media.101.2024.1080p.WEB-DL-GROUPE",
-    "accessible":  true,
-    "freeSpace":  1906908987392,
-    "unmappedFolders":  {
-                            "name":  "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
-                            "path":  "Exemple.Media.103.2024.1080p.WEB-DL-GROUPE",
-                            "relativePath":  "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE"
-                        },
-    "id":  1
-}
+[
+  {
+    "path": "Exemple.Media.102.2024.1080p.WEB-DL-GROUPE",
+    "accessible": true,
+    "freeSpace": 1906908987392,
+    "unmappedFolders": [
+      {
+        "name": "Exemple.Media.101.2024.1080p.WEB-DL-GROUPE",
+        "path": "Exemple.Media.103.2024.1080p.WEB-DL-GROUPE",
+        "relativePath": "Exemple.Media.101.2024.1080p.WEB-DL-GROUPE"
+      }
+    ],
+    "id": 1
+  }
+]

@@ -1,251 +1,255 @@
 {
-    "page":  1,
-    "pageSize":  5,
-    "sortKey":  "date",
-    "sortDirection":  "descending",
-    "totalRecords":  83,
-    "records":  [
-                    {
-                        "movieId":  47,
-                        "sourceTitle":  "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE",
-                        "languages":  [
-                                          {
-                                              "id":  2,
-                                              "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
-                                          },
-                                          {
-                                              "id":  8,
-                                              "name":  "Exemple.Media.48.2024.1080p.WEB-DL-GROUPE"
-                                          }
-                                      ],
-                        "quality":  {
-                                        "quality":  {
-                                                        "id":  3,
-                                                        "name":  "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE",
-                                                        "source":  "webdl",
-                                                        "resolution":  1080,
-                                                        "modifier":  "none"
-                                                    },
-                                        "revision":  {
-                                                         "version":  1,
-                                                         "real":  0,
-                                                         "isRepack":  false
-                                                     }
-                                    },
-                        "customFormats":  null,
-                        "customFormatScore":  0,
-                        "qualityCutoffNotMet":  false,
-                        "date":  "2026-08-10T16:42:01Z",
-                        "downloadId":  "0707070707070707070707070707070707070707",
-                        "eventType":  "downloadFolderImported",
-                        "data":  {
-                                     "fileId":  "41",
-                                     "droppedPath":  "Exemple.Media.21.2024.1080p.WEB-DL-GROUPE",
-                                     "importedPath":  "Exemple.Media.50.2024.1080p.WEB-DL-GROUPE",
-                                     "downloadClient":  "qBittorrent",
-                                     "downloadClientName":  "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
-                                     "releaseGroup":  "Exemple.Media.52.2024.1080p.WEB-DL-GROUPE",
-                                     "customFormatScore":  "0",
-                                     "size":  "9938376044",
-                                     "indexerFlags":  "G_Freeleech"
-                                 },
-                        "id":  84
-                    },
-                    {
-                        "movieId":  47,
-                        "sourceTitle":  "Exemple.Media.53.2024.1080p.WEB-DL-GROUPE",
-                        "languages":  {
-                                          "id":  2,
-                                          "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
-                                      },
-                        "quality":  {
-                                        "quality":  {
-                                                        "id":  3,
-                                                        "name":  "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE",
-                                                        "source":  "webdl",
-                                                        "resolution":  1080,
-                                                        "modifier":  "none"
-                                                    },
-                                        "revision":  {
-                                                         "version":  1,
-                                                         "real":  0,
-                                                         "isRepack":  false
-                                                     }
-                                    },
-                        "customFormats":  null,
-                        "customFormatScore":  0,
-                        "qualityCutoffNotMet":  false,
-                        "date":  "2026-08-10T16:37:57Z",
-                        "downloadId":  "0707070707070707070707070707070707070707",
-                        "eventType":  "grabbed",
-                        "data":  {
-                                     "indexer":  "Exemple.Media.54.2024.1080p.WEB-DL-GROUPE",
-                                     "nzbInfoUrl":  "Exemple.Media.55.2024.1080p.WEB-DL-GROUPE",
-                                     "releaseGroup":  "Exemple.Media.52.2024.1080p.WEB-DL-GROUPE",
-                                     "age":  "13",
-                                     "ageHours":  "312.7032154226389",
-                                     "ageMinutes":  "18762.192925443334",
-                                     "publishedDate":  "2026-07-28T15:55:46Z",
-                                     "downloadClient":  "qBittorrent",
-                                     "downloadClientName":  "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
-                                     "size":  "9938376044",
-                                     "downloadUrl":  "http://service.exemple.invalid/chemin\u0026link=OEJieS91VTgxNDZqcERFeEtERUxSNkp3Z1lBb1JaV2hPejd3TVkxTTNSNjM3S2hwckRXMmNrdlFhZHFmRTd0UXR1K3Zxemp0bHdiUC9KdWFMcHkya0V3cVM5ZmJnclVWUkQ3bHlsM1k3Zk4xZmJwVFY2bmhER2dvQldjenpTNHpyUXpiaFp3Syt1TjVOV05KV2pxV3QxUWZzTlF0WGhJemRXSkJYOUF3N1JOM092K3VUVUxUbkFPaWJDc0F2QUpuUjlLNlVXdnVHYXorSXhld1Uxeno3bllGMTZCdVVSRTd2M3JPNU52ZkJHTVVNbUlRY0VaNU1UUnRUWENTOG45eUVWN1NSMWJXaXpvY2JrYzlRLzZjdkJocEsrUkFWdDRpd29kTXAyWkNLYnpZbEFmMjVaTzE4MEFnNDZZSUtVMVQ\u0026file=Demon.Slayer.Kimetsu.No.Yaiba.Le.Film.La.Forteresse.Infinie.2025.AD.MULTI.VFF.1080p.WEB.AAC.2.0.x264-Tsundere-Raws",
-                                     "guid":  "http://service.exemple.invalid/chemin",
-                                     "tmdbId":  "1311031",
-                                     "imdbId":  "0",
-                                     "protocol":  "2",
-                                     "customFormatScore":  "0",
-                                     "movieMatchType":  "Id",
-                                     "releaseSource":  "Search",
-                                     "indexerFlags":  "G_Freeleech",
-                                     "indexerId":  "3",
-                                     "torrentInfoHash":  "0707070707070707070707070707070707070707"
-                                 },
-                        "id":  83
-                    },
-                    {
-                        "movieId":  46,
-                        "sourceTitle":  "Exemple.Media.56.2024.1080p.WEB-DL-GROUPE",
-                        "languages":  [
-                                          {
-                                              "id":  2,
-                                              "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
-                                          },
-                                          {
-                                              "id":  1,
-                                              "name":  "Exemple.Media.57.2024.1080p.WEB-DL-GROUPE"
-                                          }
-                                      ],
-                        "quality":  {
-                                        "quality":  {
-                                                        "id":  18,
-                                                        "name":  "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
-                                                        "source":  "webdl",
-                                                        "resolution":  2160,
-                                                        "modifier":  "none"
-                                                    },
-                                        "revision":  {
-                                                         "version":  2,
-                                                         "real":  0,
-                                                         "isRepack":  true
-                                                     }
-                                    },
-                        "customFormats":  null,
-                        "customFormatScore":  0,
-                        "qualityCutoffNotMet":  false,
-                        "date":  "2026-08-10T15:55:01Z",
-                        "downloadId":  "0606060606060606060606060606060606060606",
-                        "eventType":  "downloadFolderImported",
-                        "data":  {
-                                     "fileId":  "40",
-                                     "droppedPath":  "Exemple.Media.18.2024.1080p.WEB-DL-GROUPE",
-                                     "importedPath":  "Exemple.Media.59.2024.1080p.WEB-DL-GROUPE",
-                                     "downloadClient":  "qBittorrent",
-                                     "downloadClientName":  "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
-                                     "releaseGroup":  "Exemple.Media.60.2024.1080p.WEB-DL-GROUPE",
-                                     "customFormatScore":  "0",
-                                     "size":  "21062647425",
-                                     "indexerFlags":  "G_Freeleech"
-                                 },
-                        "id":  82
-                    },
-                    {
-                        "movieId":  46,
-                        "sourceTitle":  "Exemple.Media.61.2024.1080p.WEB-DL-GROUPE",
-                        "languages":  {
-                                          "id":  2,
-                                          "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
-                                      },
-                        "quality":  {
-                                        "quality":  {
-                                                        "id":  18,
-                                                        "name":  "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
-                                                        "source":  "webdl",
-                                                        "resolution":  2160,
-                                                        "modifier":  "none"
-                                                    },
-                                        "revision":  {
-                                                         "version":  2,
-                                                         "real":  0,
-                                                         "isRepack":  true
-                                                     }
-                                    },
-                        "customFormats":  null,
-                        "customFormatScore":  0,
-                        "qualityCutoffNotMet":  false,
-                        "date":  "2026-08-10T15:47:43Z",
-                        "downloadId":  "0606060606060606060606060606060606060606",
-                        "eventType":  "grabbed",
-                        "data":  {
-                                     "indexer":  "Exemple.Media.54.2024.1080p.WEB-DL-GROUPE",
-                                     "nzbInfoUrl":  "Exemple.Media.62.2024.1080p.WEB-DL-GROUPE",
-                                     "releaseGroup":  "Exemple.Media.60.2024.1080p.WEB-DL-GROUPE",
-                                     "age":  "14",
-                                     "ageHours":  "339.56638702319447",
-                                     "ageMinutes":  "20373.983221635",
-                                     "publishedDate":  "2026-07-27T12:13:45Z",
-                                     "downloadClient":  "qBittorrent",
-                                     "downloadClientName":  "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
-                                     "size":  "21062647425",
-                                     "downloadUrl":  "http://service.exemple.invalid/chemin\u0026link=cTZTTVo0N2hZSFM0TGlsVUY2VkV4RXVUbUlOYkx3RWdoMFBUOVFpZHZQSC9qZFpma0xvb1d5ZlNpMWdDNFcxNnFTbEh0eEVUY2ZUZjI0eGNNelpVZnlkdXViTXZXdEplYVdZSGVRSFFPY1ptbG1EM0xhQm1nVjhEVnJ4WElDN3ByLzdrelA2TE5QcjZRK1R0ajg1MHduQU54N280T1lOdDZLcDB5Vk9zL1ZJOGZyNC84bmZEZGJyVEZUL0txRS9ndXhwMyt4YkxTMWQ2U283bm9ucElJeE1OV21IV0dJbk5YL2F4ZGtXWnRFVnBOUHlZUkZCU3BvQjJadW03SkdSRVBtSDBsTVl2ZHI0THZxQmY5dlI2cm9VVnd6ZVlGN3N3ZWVteEI4NkJoM2M9\u0026file=Supergirl.2026.REPACK.MULTi.VF2.2160p.WEB.10bits.DV.HDR10.EAC3.5.1.H265-SpK79",
-                                     "guid":  "http://service.exemple.invalid/chemin",
-                                     "tmdbId":  "1081003",
-                                     "imdbId":  "0",
-                                     "protocol":  "2",
-                                     "customFormatScore":  "0",
-                                     "movieMatchType":  "Id",
-                                     "releaseSource":  "Search",
-                                     "indexerFlags":  "G_Freeleech",
-                                     "indexerId":  "3",
-                                     "torrentInfoHash":  "0606060606060606060606060606060606060606"
-                                 },
-                        "id":  81
-                    },
-                    {
-                        "movieId":  44,
-                        "sourceTitle":  "Exemple.Media.63.2024.1080p.WEB-DL-GROUPE",
-                        "languages":  [
-                                          {
-                                              "id":  2,
-                                              "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
-                                          },
-                                          {
-                                              "id":  1,
-                                              "name":  "Exemple.Media.57.2024.1080p.WEB-DL-GROUPE"
-                                          }
-                                      ],
-                        "quality":  {
-                                        "quality":  {
-                                                        "id":  19,
-                                                        "name":  "Exemple.Media.64.2024.1080p.WEB-DL-GROUPE",
-                                                        "source":  "bluray",
-                                                        "resolution":  2160,
-                                                        "modifier":  "none"
-                                                    },
-                                        "revision":  {
-                                                         "version":  1,
-                                                         "real":  0,
-                                                         "isRepack":  false
-                                                     }
-                                    },
-                        "customFormats":  null,
-                        "customFormatScore":  0,
-                        "qualityCutoffNotMet":  false,
-                        "date":  "2025-12-14T19:27:30Z",
-                        "downloadId":  "0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E",
-                        "eventType":  "downloadFolderImported",
-                        "data":  {
-                                     "fileId":  "39",
-                                     "droppedPath":  "Exemple.Media.65.2024.1080p.WEB-DL-GROUPE",
-                                     "importedPath":  "Exemple.Media.66.2024.1080p.WEB-DL-GROUPE",
-                                     "downloadClient":  "qBittorrent",
-                                     "downloadClientName":  "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
-                                     "releaseGroup":  "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
-                                     "customFormatScore":  "0",
-                                     "size":  "16017251873",
-                                     "indexerFlags":  "0"
-                                 },
-                        "id":  80
-                    }
-                ]
+  "page": 1,
+  "pageSize": 5,
+  "sortKey": "date",
+  "sortDirection": "descending",
+  "totalRecords": 83,
+  "records": [
+    {
+      "movieId": 47,
+      "sourceTitle": "Exemple.Media.52.2024.1080p.WEB-DL-GROUPE",
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE"
+        },
+        {
+          "id": 8,
+          "name": "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "Exemple.Media.48.2024.1080p.WEB-DL-GROUPE",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "qualityCutoffNotMet": false,
+      "date": "2026-08-10T16:42:01Z",
+      "downloadId": "0707070707070707070707070707070707070707",
+      "eventType": "downloadFolderImported",
+      "data": {
+        "fileId": "41",
+        "droppedPath": "Exemple.Media.21.2024.1080p.WEB-DL-GROUPE",
+        "importedPath": "Exemple.Media.62.2024.1080p.WEB-DL-GROUPE",
+        "downloadClient": "qBittorrent",
+        "downloadClientName": "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
+        "releaseGroup": "Exemple.Media.57.2024.1080p.WEB-DL-GROUPE",
+        "customFormatScore": "0",
+        "size": "9938376044",
+        "indexerFlags": "G_Freeleech"
+      },
+      "id": 84
+    },
+    {
+      "movieId": 47,
+      "sourceTitle": "Exemple.Media.53.2024.1080p.WEB-DL-GROUPE",
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "Exemple.Media.48.2024.1080p.WEB-DL-GROUPE",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "qualityCutoffNotMet": false,
+      "date": "2026-08-10T16:37:57Z",
+      "downloadId": "0707070707070707070707070707070707070707",
+      "eventType": "grabbed",
+      "data": {
+        "indexer": "Exemple.Media.60.2024.1080p.WEB-DL-GROUPE",
+        "nzbInfoUrl": "Exemple.Media.65.2024.1080p.WEB-DL-GROUPE",
+        "releaseGroup": "Exemple.Media.57.2024.1080p.WEB-DL-GROUPE",
+        "age": "13",
+        "ageHours": "312.7032154226389",
+        "ageMinutes": "18762.192925443334",
+        "publishedDate": "2026-07-28T15:55:46Z",
+        "downloadClient": "qBittorrent",
+        "downloadClientName": "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
+        "size": "9938376044",
+        "downloadUrl": "http://service.exemple.invalid/chemin",
+        "guid": "http://service.exemple.invalid/chemin",
+        "tmdbId": "1311031",
+        "imdbId": "0",
+        "protocol": "2",
+        "customFormatScore": "0",
+        "movieMatchType": "Id",
+        "releaseSource": "Search",
+        "indexerFlags": "G_Freeleech",
+        "indexerId": "3",
+        "torrentInfoHash": "0707070707070707070707070707070707070707"
+      },
+      "id": 83
+    },
+    {
+      "movieId": 46,
+      "sourceTitle": "Exemple.Media.54.2024.1080p.WEB-DL-GROUPE",
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE"
+        },
+        {
+          "id": 1,
+          "name": "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 18,
+          "name": "Exemple.Media.50.2024.1080p.WEB-DL-GROUPE",
+          "source": "webdl",
+          "resolution": 2160,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 2,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "qualityCutoffNotMet": false,
+      "date": "2026-08-10T15:55:01Z",
+      "downloadId": "0606060606060606060606060606060606060606",
+      "eventType": "downloadFolderImported",
+      "data": {
+        "fileId": "40",
+        "droppedPath": "Exemple.Media.20.2024.1080p.WEB-DL-GROUPE",
+        "importedPath": "Exemple.Media.63.2024.1080p.WEB-DL-GROUPE",
+        "downloadClient": "qBittorrent",
+        "downloadClientName": "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
+        "releaseGroup": "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
+        "customFormatScore": "0",
+        "size": "21062647425",
+        "indexerFlags": "G_Freeleech"
+      },
+      "id": 82
+    },
+    {
+      "movieId": 46,
+      "sourceTitle": "Exemple.Media.55.2024.1080p.WEB-DL-GROUPE",
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 18,
+          "name": "Exemple.Media.50.2024.1080p.WEB-DL-GROUPE",
+          "source": "webdl",
+          "resolution": 2160,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 2,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "qualityCutoffNotMet": false,
+      "date": "2026-08-10T15:47:43Z",
+      "downloadId": "0606060606060606060606060606060606060606",
+      "eventType": "grabbed",
+      "data": {
+        "indexer": "Exemple.Media.60.2024.1080p.WEB-DL-GROUPE",
+        "nzbInfoUrl": "Exemple.Media.66.2024.1080p.WEB-DL-GROUPE",
+        "releaseGroup": "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
+        "age": "14",
+        "ageHours": "339.56638702319447",
+        "ageMinutes": "20373.983221635",
+        "publishedDate": "2026-07-27T12:13:45Z",
+        "downloadClient": "qBittorrent",
+        "downloadClientName": "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
+        "size": "21062647425",
+        "downloadUrl": "http://service.exemple.invalid/chemin",
+        "guid": "http://service.exemple.invalid/chemin",
+        "tmdbId": "1081003",
+        "imdbId": "0",
+        "protocol": "2",
+        "customFormatScore": "0",
+        "movieMatchType": "Id",
+        "releaseSource": "Search",
+        "indexerFlags": "G_Freeleech",
+        "indexerId": "3",
+        "torrentInfoHash": "0606060606060606060606060606060606060606"
+      },
+      "id": 81
+    },
+    {
+      "movieId": 44,
+      "sourceTitle": "Exemple.Media.56.2024.1080p.WEB-DL-GROUPE",
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.46.2024.1080p.WEB-DL-GROUPE"
+        },
+        {
+          "id": 1,
+          "name": "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 19,
+          "name": "Exemple.Media.51.2024.1080p.WEB-DL-GROUPE",
+          "source": "bluray",
+          "resolution": 2160,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "qualityCutoffNotMet": false,
+      "date": "2025-12-14T19:27:30Z",
+      "downloadId": "0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E",
+      "eventType": "downloadFolderImported",
+      "data": {
+        "fileId": "39",
+        "droppedPath": "Exemple.Media.61.2024.1080p.WEB-DL-GROUPE",
+        "importedPath": "Exemple.Media.64.2024.1080p.WEB-DL-GROUPE",
+        "downloadClient": "qBittorrent",
+        "downloadClientName": "Exemple.Media.67.2024.1080p.WEB-DL-GROUPE",
+        "releaseGroup": "Exemple.Media.59.2024.1080p.WEB-DL-GROUPE",
+        "customFormatScore": "0",
+        "size": "16017251873",
+        "indexerFlags": "0"
+      },
+      "id": 80
+    }
+  ]
 }

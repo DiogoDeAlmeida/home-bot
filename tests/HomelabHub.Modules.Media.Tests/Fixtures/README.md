@@ -11,6 +11,19 @@ d'après la documentation v5 est exactement le genre d'erreur qui coûte une soi
 | Seerr | 3.4.1 |
 | qBittorrent | 5.1.0 (WebAPI 2.11.4) |
 
+## Anonymisation
+
+Produite par [`scripts/anonymize-fixtures.ps1`](../../../../scripts/anonymize-fixtures.ps1), qui
+opère **uniquement par substitution de texte**. Il ne parse jamais le JSON et ne le resérialise
+jamais.
+
+> **Leçon payée.** Une première version passait par `ConvertFrom-Json` / `ConvertTo-Json` de
+> PowerShell, qui **déballe silencieusement les tableaux à un seul élément** :
+> `"records": [ { … } ]` devenait `"records": { … }`. Les fixtures restaient du JSON valide mais
+> ne représentaient plus ce que les services renvoient — c'est-à-dire qu'elles ne servaient plus
+> à rien. Les tests de contrat l'ont attrapé ; sans eux, la corrélation aurait été écrite contre
+> des données fausses.
+
 ## Ce que l'anonymisation a retiré
 
 Titres de médias, chemins de fichiers, URL d'indexeurs et de trackers, adresses IP du LAN, noms
