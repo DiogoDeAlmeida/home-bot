@@ -37,6 +37,23 @@ public interface IArrClient
     Task<ServiceResult<IReadOnlyList<ArrHistoryRecord>>> GetRecentHistoryAsync(
         int pageSize, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Historique d'un téléchargement précis. L'API filtre côté serveur.
+    /// </summary>
+    /// <remarks>
+    /// <b>Repli, pas chemin nominal.</b> Une page d'historique a une taille finie : si plusieurs
+    /// imports surviennent entre deux cycles, ou si un cycle échoue et que le suivant arrive
+    /// tard, l'événement terminal d'un parcours peut être poussé hors de la page — et ce
+    /// parcours resterait indéterminé pour toujours.
+    /// <para>
+    /// Cet appel ne se déclenche que sur ce cas précis : une entrée de file disparue sans
+    /// qu'aucun événement terminal ait été vu. Il reste donc rare, et ne dégénère pas en une
+    /// requête par parcours et par cycle.
+    /// </para>
+    /// </remarks>
+    Task<ServiceResult<IReadOnlyList<ArrHistoryRecord>>> GetHistoryForDownloadAsync(
+        string downloadId, CancellationToken cancellationToken);
+
     Task<ServiceResult<ArrSystemStatus>> GetSystemStatusAsync(CancellationToken cancellationToken);
 
     Task<ServiceResult<IReadOnlyList<ArrDiskSpace>>> GetDiskSpaceAsync(CancellationToken cancellationToken);
@@ -71,17 +88,39 @@ internal abstract class ArrClient(HttpClient http, ArrFlavor flavor) : IArrClien
 
     public ArrFlavor Flavor => flavor;
 
+    /// <summary>
+    /// <b>Toute la divergence entre Radarr et Sonarr tient ici, dans trois paramètres.</b>
+    /// </summary>
+    /// <remarks>
+    /// C'est le premier endroit qui cassera à la sortie de Sonarr v5 ou d'un Radarr v7. Il est
+    /// isolé et nommé pour cette raison, plutôt qu'enfoui dans une condition au milieu d'une
+    /// méthode. Le reste de l'API v3 est réellement commun aux deux, captures à l'appui.
+    /// </remarks>
+    private static string QueueQuery(ArrFlavor flavor) => flavor switch
+    {
+        //                       ┌─ inclut les entrées sans média connu
+        //                       │                            ┌─ joint le film / la série
+        //                       │                            │       ┌─ joint l'épisode
+        ArrFlavor.Radarr =>
+            "includeUnknownMovieItems=true&includeMovie=true",
+        ArrFlavor.Sonarr =>
+            "includeUnknownSeriesItems=true&includeSeries=true&includeEpisode=true",
+        _ => throw new ArgumentOutOfRangeException(nameof(flavor)),
+    };
+
     public Task<ServiceResult<IReadOnlyList<ArrQueueRecord>>> GetQueueAsync(
         CancellationToken cancellationToken)
     {
         // Les objets joints coûtent en bande passante — une réponse Sonarr fait 236 Ko pour
         // 44 entrées — mais évitent un appel par média pour retrouver tmdbId et tvdbId.
-        var query = flavor == ArrFlavor.Radarr
-            ? "pageSize=200&includeUnknownMovieItems=true&includeMovie=true"
-            : "pageSize=200&includeUnknownSeriesItems=true&includeSeries=true&includeEpisode=true";
-
-        return GetPagedAsync<ArrQueueRecord>($"api/v3/queue?{query}", cancellationToken);
+        return GetPagedAsync<ArrQueueRecord>(
+            $"api/v3/queue?pageSize=200&{QueueQuery(flavor)}", cancellationToken);
     }
+
+    public Task<ServiceResult<IReadOnlyList<ArrHistoryRecord>>> GetHistoryForDownloadAsync(
+        string downloadId, CancellationToken cancellationToken) =>
+        GetPagedAsync<ArrHistoryRecord>(
+            $"api/v3/history?downloadId={Uri.EscapeDataString(downloadId)}", cancellationToken);
 
     public Task<ServiceResult<IReadOnlyList<ArrHistoryRecord>>> GetRecentHistoryAsync(
         int pageSize, CancellationToken cancellationToken) =>
