@@ -67,7 +67,7 @@ internal static class ModuleEndpoints
                             moduleKey = module.Key,
                             descriptor.Key,
                             descriptor.Title,
-                            descriptor.ShowOnDiscordDashboard,
+                            descriptor.ShowOnChatDashboard,
                             descriptor.Order,
                             payload.Data,
                             payload.GeneratedAt,

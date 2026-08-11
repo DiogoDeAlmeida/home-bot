@@ -2,20 +2,30 @@ import { useState } from 'react'
 import { useJournal } from '@/api/hooks'
 import type { HubEventSeverity } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
-import { Badge, Button, Card, Spinner } from '@/components/ui/primitives'
+import {
+  Badge,
+  Card,
+  Code,
+  Group,
+  Loader,
+  SegmentedControl,
+  Stack,
+  Text,
+} from '@/components/ui'
 import { formatDateTime } from '@/lib/utils'
 
-const SEVERITY: Record<HubEventSeverity, { label: string; tone: 'neutral' | 'warn' | 'bad' }> = {
-  0: { label: 'info', tone: 'neutral' },
-  1: { label: 'anomalie', tone: 'warn' },
-  2: { label: 'critique', tone: 'bad' },
+const SEVERITY: Record<HubEventSeverity, { label: string; color: string }> = {
+  0: { label: 'info', color: 'gray' },
+  1: { label: 'anomalie', color: 'yellow' },
+  2: { label: 'critique', color: 'red' },
 }
 
 export function JournalPage() {
   const journal = useJournal()
-  const [minimum, setMinimum] = useState<HubEventSeverity>(0)
+  const [minimum, setMinimum] = useState('0')
 
-  const events = journal.data?.filter((event) => event.severity >= minimum) ?? []
+  const threshold = Number(minimum) as HubEventSeverity
+  const events = journal.data?.filter((event) => event.severity >= threshold) ?? []
 
   return (
     <>
@@ -24,49 +34,57 @@ export function JournalPage() {
         subtitle="Derniers événements publiés par les modules. Diagnostiquer sans ouvrir de session SSH."
       />
 
-      <div className="mb-4 flex gap-2">
-        {([0, 1, 2] as HubEventSeverity[]).map((level) => (
-          <Button
-            key={level}
-            size="sm"
-            variant={minimum === level ? 'primary' : 'secondary'}
-            onClick={() => setMinimum(level)}
-          >
-            {level === 0 ? 'Tout' : SEVERITY[level].label}
-          </Button>
-        ))}
-      </div>
+      <SegmentedControl
+        value={minimum}
+        onChange={setMinimum}
+        mb="md"
+        data={[
+          { value: '0', label: 'Tout' },
+          { value: '1', label: 'Anomalies' },
+          { value: '2', label: 'Critiques' },
+        ]}
+      />
 
-      {journal.isLoading && <Spinner />}
+      {journal.isLoading && <Loader />}
 
       {!journal.isLoading && events.length === 0 && (
         <Card>
-          <p className="text-sm text-ink-muted">Aucun événement à ce niveau.</p>
+          <Text size="sm" c="dimmed">
+            Aucun événement à ce niveau.
+          </Text>
         </Card>
       )}
 
-      <div className="space-y-2">
+      <Stack gap="xs">
         {events.map((event, index) => (
-          <Card key={`${event.dedupeKey ?? event.type}-${event.occurredAt}-${index}`} className="py-3">
-            <div className="flex flex-wrap items-baseline gap-2">
-              <Badge tone={SEVERITY[event.severity].tone}>{SEVERITY[event.severity].label}</Badge>
-              <span className="font-medium">{event.title}</span>
-              <code className="font-mono text-xs text-ink-muted">{event.type}</code>
-              <span className="ml-auto text-xs text-ink-muted">
+          <Card key={`${event.dedupeKey ?? event.type}-${event.occurredAt}-${index}`} padding="sm">
+            <Group gap="xs" wrap="wrap" align="baseline">
+              <Badge variant="light" color={SEVERITY[event.severity].color}>
+                {SEVERITY[event.severity].label}
+              </Badge>
+              <Text fw={500} size="sm">
+                {event.title}
+              </Text>
+              <Code>{event.type}</Code>
+              <Text size="xs" c="dimmed" ml="auto">
                 {formatDateTime(event.occurredAt)}
-              </span>
-            </div>
-            {event.body && <p className="mt-1 text-sm text-ink-muted">{event.body}</p>}
+              </Text>
+            </Group>
+            {event.body && (
+              <Text size="sm" c="dimmed" mt={4}>
+                {event.body}
+              </Text>
+            )}
           </Card>
         ))}
-      </div>
+      </Stack>
 
       {events.some((event) => event.dedupeKey) && (
-        <p className="mt-4 text-xs text-ink-muted">
+        <Text size="xs" c="dimmed" mt="md">
           Les anomalies portant une clé de déduplication sont republiées à chaque cycle : c'est
           ainsi que le noyau sait qu'elles durent. Le regroupement en une seule notification
           arrivera avec le moteur d'anomalies.
-        </p>
+        </Text>
       )}
     </>
   )

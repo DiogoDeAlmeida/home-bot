@@ -3,7 +3,7 @@ using HomelabHub.Abstractions.Modules;
 
 namespace HomelabHub.Modules.SystemInfo.Capabilities;
 
-/// <summary><c>/system disk</c> — occupation des volumes.</summary>
+/// <summary><c>system disk</c> — occupation des volumes.</summary>
 internal sealed class DiskCapability(IModuleState<SystemSnapshot> state) : IHubCapability
 {
     public CapabilityDescriptor Descriptor { get; } = new(
@@ -13,7 +13,7 @@ internal sealed class DiskCapability(IModuleState<SystemSnapshot> state) : IHubC
         Parameters: [],
         Kind: CapabilityKind.Query,
         Exposure: CapabilityExposure.All,
-        Discord: new DiscordBinding(SubGroup: null, Name: "disk"));
+        Command: new CommandBinding("disk"));
 
     public Task<CapabilityResult> ExecuteAsync(CapabilityInvocation invocation,
                                                CancellationToken cancellationToken) =>

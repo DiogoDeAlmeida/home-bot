@@ -1,3 +1,5 @@
+import { modals } from '@mantine/modals'
+import { notifications } from '@mantine/notifications'
 import {
   keys,
   useBackups,
@@ -6,17 +8,27 @@ import {
   useRunCapability,
   useSaveConfig,
 } from '@/api/hooks'
+import type { CapabilitySummary } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
 import { SchemaForm } from '@/components/SchemaForm'
-import { Alert, Badge, Button, Card, Spinner } from '@/components/ui/primitives'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Code,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from '@/components/ui'
 import { formatBytes, formatDateTime } from '@/lib/utils'
 
 /**
  * Réglages du hub et sauvegardes.
  *
  * Le formulaire est **le même composant** que celui de la page Modules : le noyau décrit ses
- * réglages avec la primitive des modules, sous le préfixe réservé `hub.` (ADR-0013). Aux yeux
- * de l'interface, c'est un pseudo-module ; dans le contrat, il n'en est pas un.
+ * réglages avec la primitive des modules, sous le préfixe réservé `hub.` (ADR-0013).
  */
 export function SettingsPage() {
   const surface = useConfigSurface('/api/settings', keys.settings)
@@ -29,9 +41,9 @@ export function SettingsPage() {
         subtitle="Réglages du hub lui-même. Même schéma, même formulaire que pour un module."
       />
 
-      <div className="space-y-4">
+      <Stack gap="md">
         <Card>
-          {surface.isLoading && <Spinner />}
+          {surface.isLoading && <Loader size="sm" />}
           {surface.data && (
             <SchemaForm
               surface={surface.data}
@@ -44,7 +56,7 @@ export function SettingsPage() {
         </Card>
 
         <BackupsCard />
-      </div>
+      </Stack>
     </>
   )
 }
@@ -56,52 +68,82 @@ function BackupsCard() {
 
   const createBackup = capabilities.data?.find((c) => c.key === 'system.backup.create')
 
+  const launch = (capability: CapabilitySummary) => {
+    const execute = () =>
+      run.mutate(
+        { key: capability.key },
+        {
+          onSuccess: (result) =>
+            notifications.show({
+              color: result.outcome === 0 ? 'green' : 'yellow',
+              title: capability.displayName,
+              message: result.message ?? 'Terminé.',
+            }),
+          onError: (error) =>
+            notifications.show({
+              color: 'red',
+              title: capability.displayName,
+              message: (error as Error).message,
+            }),
+        },
+      )
+
+    // RequireConfirmation est désormais porté par la capacité, pas par le canal (ADR-0016) :
+    // l'interface web demande donc la même confirmation qu'un bouton dans un salon.
+    if (!capability.requireConfirmation) {
+      execute()
+      return
+    }
+
+    modals.openConfirmModal({
+      title: capability.displayName,
+      children: <Text size="sm">{capability.description}</Text>,
+      labels: { confirm: 'Confirmer', cancel: 'Annuler' },
+      onConfirm: execute,
+    })
+  }
+
   return (
     <Card>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-medium">Sauvegardes</h2>
-          <p className="mt-1 text-sm text-ink-muted">
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="md" mb="md">
+        <Stack gap={4} style={{ flex: 1, minWidth: 260 }}>
+          <Text fw={500}>Sauvegardes</Text>
+          <Text size="sm" c="dimmed">
             Une archive unique par sauvegarde : base, keyring et configuration. Restaurer la base
             sans son keyring rendrait tous les secrets illisibles.
-          </p>
-        </div>
+          </Text>
+        </Stack>
         {createBackup && (
-          <Button
-            onClick={() => run.mutate({ key: createBackup.key })}
-            disabled={run.isPending}
-          >
-            {run.isPending ? 'Sauvegarde…' : 'Sauvegarder maintenant'}
+          <Button onClick={() => launch(createBackup)} loading={run.isPending}>
+            Sauvegarder maintenant
           </Button>
         )}
-      </div>
+      </Group>
 
-      {run.data && (
-        <div className="mb-4">
-          <Alert tone={run.data.outcome === 0 ? 'ok' : 'warn'}>{run.data.message}</Alert>
-        </div>
-      )}
-      {run.isError && (
-        <div className="mb-4">
-          <Alert tone="bad">{(run.error as Error).message}</Alert>
-        </div>
-      )}
-
-      {backups.isLoading && <Spinner />}
+      {backups.isLoading && <Loader size="sm" />}
       {backups.data?.length === 0 && (
-        <Alert tone="warn">Aucune archive pour l'instant.</Alert>
+        <Alert color="yellow" variant="light">
+          Aucune archive pour l'instant.
+        </Alert>
       )}
 
       {backups.data && backups.data.length > 0 && (
-        <ul className="divide-y divide-border-subtle text-sm">
+        <Stack gap="xs">
           {backups.data.map((archive) => (
-            <li key={archive.fileName} className="flex flex-wrap items-baseline gap-3 py-2">
-              <code className="font-mono text-xs">{archive.fileName}</code>
-              <span className="text-ink-muted">{formatDateTime(archive.createdAt)}</span>
-              <Badge>{formatBytes(archive.sizeBytes)}</Badge>
-            </li>
+            <Group key={archive.fileName} gap="md" wrap="wrap">
+              <Code>{archive.fileName}</Code>
+              <Text size="sm" c="dimmed">
+                {formatDateTime(archive.createdAt)}
+              </Text>
+              <Badge variant="light" color="gray">
+                {formatBytes(archive.sizeBytes)}
+              </Badge>
+              <Text size="xs" c="dimmed">
+                {archive.entryCount} fichiers
+              </Text>
+            </Group>
           ))}
-        </ul>
+        </Stack>
       )}
     </Card>
   )

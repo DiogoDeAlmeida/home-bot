@@ -4,23 +4,22 @@ using HomelabHub.Abstractions.Modules;
 namespace HomelabHub.Modules.SystemInfo.Capabilities;
 
 /// <summary>
-/// <c>/system status</c> — version, disponibilité, dernière sauvegarde.
+/// <c>system status</c> — version et disponibilité.
 /// </summary>
 /// <remarks>
-/// Le binding n'a pas de sous-groupe : <c>/system status</c> tient en deux niveaux, et Discord
-/// accepte qu'une commande mélange sous-commandes et groupes. Imposer un groupe intermédiaire
-/// donnerait <c>/system status show</c>, plus long à taper pour rien.
+/// Le chemin de commande n'a qu'un segment : la capacité se rattache directement à la racine du
+/// module. Chaque adaptateur le projette dans sa syntaxe — <c>/system status</c> côté Discord.
 /// </remarks>
 internal sealed class StatusCapability(IModuleState<SystemSnapshot> state) : IHubCapability
 {
     public CapabilityDescriptor Descriptor { get; } = new(
         Key: "system.status",
         DisplayName: "État du hub",
-        Description: "Version, durée de fonctionnement et dernière sauvegarde.",
+        Description: "Version et durée de fonctionnement.",
         Parameters: [],
         Kind: CapabilityKind.Query,
         Exposure: CapabilityExposure.All,
-        Discord: new DiscordBinding(SubGroup: null, Name: "status"));
+        Command: new CommandBinding("status"));
 
     public Task<CapabilityResult> ExecuteAsync(CapabilityInvocation invocation,
                                                CancellationToken cancellationToken)

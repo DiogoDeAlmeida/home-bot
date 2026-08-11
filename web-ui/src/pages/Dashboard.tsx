@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react'
+import { SimpleGrid } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { useBackups, useModules } from '@/api/hooks'
 import type { SystemSnapshot } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
-import { Alert, Badge, Card, Spinner } from '@/components/ui/primitives'
+import { Alert, Badge, Card, Code, Group, Loader, Progress, Stack, Text } from '@/components/ui'
 import { formatBytes, formatDateTime, formatUptime } from '@/lib/utils'
 
 interface Widget {
@@ -16,11 +18,11 @@ interface Widget {
 }
 
 /**
- * Miroir web de ce que le bot affichera dans Discord.
+ * Miroir web de ce que le bot affichera dans un canal conversationnel.
  *
- * Les widgets sont des **données pures** : c'est ici qu'on décide de leur rendu, et l'adaptateur
- * Discord décidera du sien de son côté. Il n'y a pas de modèle de présentation partagé
- * (ADR-0006) — c'est une duplication assumée, moins coûteuse que l'abstraction qu'elle évite.
+ * Les widgets sont des **données pures** : c'est ici qu'on décide de leur rendu, et chaque
+ * adaptateur décidera du sien de son côté. Il n'y a pas de modèle de présentation partagé
+ * (ADR-0006) — duplication assumée, moins coûteuse que l'abstraction qu'elle évite.
  */
 export function DashboardPage() {
   const widgets = useQuery({
@@ -31,7 +33,9 @@ export function DashboardPage() {
   const modules = useModules()
   const backups = useBackups()
 
-  if (widgets.isLoading) return <Spinner />
+  if (widgets.isLoading) {
+    return <Loader />
+  }
 
   const lastBackup = backups.data?.[0]
 
@@ -42,13 +46,15 @@ export function DashboardPage() {
         subtitle="Mise à jour automatique toutes les 15 secondes."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         {widgets.data?.map((widget) => (
           <Card key={widget.key}>
-            <div className="mb-3 flex items-baseline justify-between gap-2">
-              <h2 className="font-medium">{widget.title}</h2>
-              <span className="text-xs text-ink-muted">{widget.moduleKey}</span>
-            </div>
+            <Group justify="space-between" align="baseline" mb="sm">
+              <Text fw={500}>{widget.title}</Text>
+              <Text size="xs" c="dimmed">
+                {widget.moduleKey}
+              </Text>
+            </Group>
             {widget.key === 'system.overview' ? (
               <SystemOverview snapshot={widget.data as SystemSnapshot} />
             ) : (
@@ -58,89 +64,100 @@ export function DashboardPage() {
         ))}
 
         <Card>
-          <h2 className="mb-3 font-medium">Sauvegarde</h2>
+          <Text fw={500} mb="sm">
+            Sauvegarde
+          </Text>
           {lastBackup ? (
-            <dl className="space-y-2 text-sm">
+            <Stack gap="xs">
               <Row label="Dernière">{formatDateTime(lastBackup.createdAt)}</Row>
               <Row label="Taille">{formatBytes(lastBackup.sizeBytes)}</Row>
               <Row label="Fichiers">{lastBackup.entryCount}</Row>
               <Row label="Archives">{backups.data?.length}</Row>
-            </dl>
+            </Stack>
           ) : (
-            <Alert tone="warn">
+            <Alert color="yellow" variant="light">
               Aucune sauvegarde. Le hub concentre toutes les clés d'API du homelab — en créer une
               depuis les paramètres.
             </Alert>
           )}
         </Card>
-      </div>
+      </SimpleGrid>
 
-      <h2 className="mt-8 mb-3 text-sm font-medium text-ink-muted">Modules</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Text size="sm" c="dimmed" mt="xl" mb="sm">
+        Modules
+      </Text>
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         {modules.data?.map((module) => (
-          <Card key={module.key} className="flex items-center justify-between gap-3 py-3">
-            <div>
-              <p className="font-medium">{module.displayName}</p>
-              <p className="text-xs text-ink-muted">{module.blockedReason ?? module.description}</p>
-            </div>
-            <Badge tone={module.isActive ? 'ok' : 'neutral'}>
-              {module.isActive ? 'actif' : 'inactif'}
-            </Badge>
+          <Card key={module.key} padding="sm">
+            <Group justify="space-between" wrap="nowrap">
+              <Stack gap={2}>
+                <Text fw={500}>{module.displayName}</Text>
+                <Text size="xs" c="dimmed">
+                  {module.blockedReason ?? module.description}
+                </Text>
+              </Stack>
+              <Badge color={module.isActive ? 'green' : 'gray'} variant="light">
+                {module.isActive ? 'actif' : 'inactif'}
+              </Badge>
+            </Group>
           </Card>
         ))}
-      </div>
+      </SimpleGrid>
     </>
   )
 }
 
 function SystemOverview({ snapshot }: { snapshot: SystemSnapshot }) {
   if (!snapshot.observedAt) {
-    return <p className="text-sm text-ink-muted">Première observation en attente.</p>
+    return (
+      <Text size="sm" c="dimmed">
+        Première observation en attente.
+      </Text>
+    )
   }
 
   return (
-    <dl className="space-y-2 text-sm">
+    <Stack gap="xs">
       <Row label="Version">
-        <code className="font-mono text-xs">{snapshot.version.split('+')[0]}</code>
+        <Code>{snapshot.version.split('+')[0]}</Code>
       </Row>
       <Row label="En service depuis">{formatUptime(snapshot.uptime)}</Row>
 
       {snapshot.volumes.map((volume) => (
-        <div key={volume.path} className="pt-2">
-          <div className="flex justify-between text-xs text-ink-muted">
-            <span>{volume.label}</span>
-            <span>
+        <Stack key={volume.path} gap={4} mt="xs">
+          <Group justify="space-between">
+            <Text size="xs" c="dimmed">
+              {volume.label}
+            </Text>
+            <Text size="xs" c="dimmed">
               {formatBytes(volume.freeBytes)} libres · {volume.freePercent} %
-            </span>
-          </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className={
-                volume.freePercent < 10 ? 'h-full bg-red-500' : 'h-full bg-accent'
-              }
-              style={{ width: `${100 - volume.freePercent}%` }}
-            />
-          </div>
-        </div>
+            </Text>
+          </Group>
+          <Progress
+            value={100 - volume.freePercent}
+            color={volume.freePercent < 10 ? 'red' : undefined}
+            size="sm"
+          />
+        </Stack>
       ))}
-    </dl>
+    </Stack>
   )
 }
 
 /** Repli pour tout widget dont le front ne connaît pas encore la forme. */
 function GenericWidget({ data }: { data: unknown }) {
-  return (
-    <pre className="overflow-x-auto rounded bg-surface-muted p-3 text-xs text-ink-muted">
-      {JSON.stringify(data, null, 2)}
-    </pre>
-  )
+  return <Code block>{JSON.stringify(data, null, 2)}</Code>
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-ink-muted">{label}</dt>
-      <dd className="font-medium">{children}</dd>
-    </div>
+    <Group justify="space-between" align="baseline" gap="md">
+      <Text size="sm" c="dimmed">
+        {label}
+      </Text>
+      <Text size="sm" fw={500}>
+        {children}
+      </Text>
+    </Group>
   )
 }

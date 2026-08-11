@@ -9,10 +9,11 @@ namespace HomelabHub.Core.Capabilities;
 /// Point de passage unique pour exécuter une capacité, quelle que soit la surface d'appel.
 /// </summary>
 /// <remarks>
-/// <b>C'est ici, et nulle part ailleurs, que se décide l'autorisation</b> (ADR-0004). Discord ne
-/// sait pas donner de permission à une sous-commande, et n'en donne aucune aux boutons : la
-/// seule protection réelle est cette vérification. La dupliquer dans l'adaptateur créerait une
-/// seconde source de vérité qui finirait par diverger.
+/// <b>C'est ici, et nulle part ailleurs, que se décide l'autorisation</b> (ADR-0004). Les
+/// plateformes conversationnelles ne savent en général pas donner de permission à une
+/// sous-commande, et n'en donnent aucune aux boutons : la seule protection réelle est cette
+/// vérification. La dupliquer dans un adaptateur créerait une seconde source de vérité qui
+/// finirait par diverger — et il faudrait la réécrire à chaque adaptateur ajouté (ADR-0016).
 /// </remarks>
 public interface ICapabilityExecutor
 {
@@ -96,9 +97,9 @@ internal sealed class CapabilityExecutor(
 
     private static bool IsExposedTo(CapabilityExposure exposure, InvocationSource source) => source switch
     {
-        InvocationSource.Rest => exposure.HasFlag(CapabilityExposure.Rest),
-        InvocationSource.DiscordCommand or InvocationSource.DiscordComponent =>
-            exposure.HasFlag(CapabilityExposure.Discord),
+        InvocationSource.Api => exposure.HasFlag(CapabilityExposure.Api),
+        InvocationSource.ChatCommand or InvocationSource.ChatButton =>
+            exposure.HasFlag(CapabilityExposure.Chat),
         InvocationSource.Internal => true,
         _ => false,
     };

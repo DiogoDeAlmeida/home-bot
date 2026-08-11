@@ -111,23 +111,27 @@ dupliquerais le noyau et finirais par diverger de lui.
 public CapabilityDescriptor Descriptor { get; } = new(
     Key: "media.queue.pause",              // toujours préfixé par la clé du module
     DisplayName: "Mettre en pause",
-    Description: "Suspend un téléchargement.",     // ≤ 100 car. si exposée à Discord
+    Description: "Suspend un téléchargement.",     // ≤ 100 car. si exposée comme commande
     Parameters: [new CapabilityParameter("hash", "Torrent", CapabilityParameterType.String, Required: true)],
-    Kind: CapabilityKind.Mutation,         // QUI peut appeler : Mutation ⇒ rôle hub-admin
-    Exposure: CapabilityExposure.All,      // D'OÙ : All, ou Rest seul pour ce qui est sensible
-    Discord: new DiscordBinding("queue", "pause"));   // → /media queue pause
+    Kind: CapabilityKind.Mutation,         // QUI peut appeler : Mutation ⇒ administrateurs
+    Exposure: CapabilityExposure.All,      // D'OÙ : All, ou Api seul pour ce qui est sensible
+    Command: new CommandBinding("queue", "pause"),
+    RequireConfirmation: true);            // propriété de l'opération, pas du canal
 ```
 
 `Kind` et `Exposure` sont indépendants et répondent à deux questions différentes. Une capacité
-qui manipule des secrets reste en `CapabilityExposure.Rest` — `system.backup.create` produit une
-archive contenant le keyring, elle n'ira jamais sur Discord.
+qui manipule des secrets reste en `CapabilityExposure.Api` — `system.backup.create` produit une
+archive contenant le keyring, elle n'ira sur aucun canal conversationnel.
 
-`SubGroup` peut être `null` pour une commande à deux niveaux (`/system disk`). Discord plafonne
-à trois niveaux au total, racine comprise.
+**Le chemin de commande est neutre** ([ADR-0016](adr/0016-extensibilite-des-adaptateurs.md)) :
+`["queue", "pause"]` est relatif au module, et chaque adaptateur l'épelle à sa façon —
+`/media queue pause` côté Discord. Un seul segment suffit pour une commande simple
+(`new CommandBinding("disk")`). Ne nomme jamais une plateforme dans une capacité.
 
-**Le validateur de démarrage refuse** : une clé mal préfixée, un `DiscordBinding` contredisant
-l'`Exposure`, une description trop longue, un paramètre obligatoire après un optionnel, un nom
-en majuscules, un doublon. L'échec est bruyant et immédiat, jamais silencieux.
+**Le validateur de démarrage refuse** : une clé mal préfixée, une commande contredisant
+l'`Exposure`, un chemin vide ou trop profond, une description trop longue, un paramètre
+obligatoire après un optionnel, un segment en majuscules, un doublon. L'échec est bruyant et
+immédiat, jamais silencieux.
 
 Ne vérifie pas les droits dans `ExecuteAsync` : l'autorisation est tranchée par le noyau, pour
 les commandes, les boutons et l'API à la fois ([ADR-0004](adr/0004-autorisation-cote-noyau.md)).

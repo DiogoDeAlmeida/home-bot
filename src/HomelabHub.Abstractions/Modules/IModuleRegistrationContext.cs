@@ -85,7 +85,7 @@ public interface IModuleRegistrationContext
     //  EXPOSITION
     // ─────────────────────────────────────────────────────────────────────────────
 
-    /// <summary>Déclare une opération invocable depuis l'API REST et/ou Discord.</summary>
+    /// <summary>Déclare une opération invocable depuis l'API et/ou un canal conversationnel.</summary>
     IModuleRegistrationContext AddCapability<T>() where T : class, IHubCapability;
 
     /// <summary>Déclare un bloc de données pour le tableau de bord.</summary>

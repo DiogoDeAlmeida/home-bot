@@ -54,14 +54,14 @@ internal sealed class CapabilityRegistry : ICapabilityRegistry
             errors.Add($"Clé de capacité « {duplicate.Key} » déclarée {duplicate.Count()} fois.");
         }
 
-        // Deux capacités du même module ne peuvent pas viser la même commande Discord.
+        // Deux capacités du même module ne peuvent pas revendiquer le même chemin de commande.
         foreach (var duplicate in registered
-                     .Where(c => c.Descriptor.Discord is not null)
-                     .GroupBy(c => $"{c.ModuleKey}/{c.Descriptor.Discord!.SubGroup}/{c.Descriptor.Discord.Name}",
+                     .Where(c => c.Descriptor.Command is not null)
+                     .GroupBy(c => $"{c.ModuleKey} {string.Join(' ', c.Descriptor.Command!.Path)}",
                               StringComparer.OrdinalIgnoreCase)
                      .Where(g => g.Count() > 1))
         {
-            errors.Add($"Commande Discord « {duplicate.Key} » revendiquée par plusieurs capacités.");
+            errors.Add($"Commande « {duplicate.Key} » revendiquée par plusieurs capacités.");
         }
 
         if (errors.Count > 0)

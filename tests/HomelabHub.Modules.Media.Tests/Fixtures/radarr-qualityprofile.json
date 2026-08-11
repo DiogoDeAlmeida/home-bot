@@ -1,0 +1,758 @@
+[
+    {
+        "name":  "Exemple.Media.68.2024.1080p.WEB-DL-GROUPE",
+        "upgradeAllowed":  false,
+        "cutoff":  7,
+        "items":  [
+                      {
+                          "quality":  {
+                                          "id":  0,
+                                          "name":  "Exemple.Media.69.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "unknown",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  24,
+                                          "name":  "Exemple.Media.70.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "workprint",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  25,
+                                          "name":  "Exemple.Media.71.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "cam",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  26,
+                                          "name":  "Exemple.Media.72.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "telesync",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  27,
+                                          "name":  "Exemple.Media.73.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "telecine",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  29,
+                                          "name":  "Exemple.Media.74.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "regional"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  28,
+                                          "name":  "Exemple.Media.75.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "screener"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  1,
+                                          "name":  "Exemple.Media.76.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  480,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  2,
+                                          "name":  "Exemple.Media.77.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  23,
+                                          "name":  "Exemple.Media.78.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "name":  "Exemple.Media.79.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  8,
+                                                            "name":  "Exemple.Media.80.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  480,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  12,
+                                                            "name":  "Exemple.Media.81.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  480,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        }
+                                    ],
+                          "allowed":  false,
+                          "id":  1000
+                      },
+                      {
+                          "quality":  {
+                                          "id":  20,
+                                          "name":  "Exemple.Media.82.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  480,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  21,
+                                          "name":  "Exemple.Media.83.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  576,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  4,
+                                          "name":  "Exemple.Media.84.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  720,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "name":  "Exemple.Media.85.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  5,
+                                                            "name":  "Exemple.Media.86.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  720,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  14,
+                                                            "name":  "Exemple.Media.87.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  720,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        }
+                                    ],
+                          "allowed":  false,
+                          "id":  1001
+                      },
+                      {
+                          "quality":  {
+                                          "id":  6,
+                                          "name":  "Exemple.Media.88.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  720,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  9,
+                                          "name":  "Exemple.Media.89.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  1080,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "name":  "Exemple.Media.90.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  3,
+                                                            "name":  "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  1080,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  15,
+                                                            "name":  "Exemple.Media.91.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  1080,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        }
+                                    ],
+                          "allowed":  true,
+                          "id":  1002
+                      },
+                      {
+                          "quality":  {
+                                          "id":  7,
+                                          "name":  "Exemple.Media.92.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  30,
+                                          "name":  "Exemple.Media.93.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  16,
+                                          "name":  "Exemple.Media.94.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  2160,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "name":  "Exemple.Media.95.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  18,
+                                                            "name":  "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  2160,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  17,
+                                                            "name":  "Exemple.Media.96.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  2160,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        }
+                                    ],
+                          "allowed":  true,
+                          "id":  1003
+                      },
+                      {
+                          "quality":  {
+                                          "id":  19,
+                                          "name":  "Exemple.Media.64.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  2160,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  31,
+                                          "name":  "Exemple.Media.97.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  2160,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  22,
+                                          "name":  "Exemple.Media.98.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "brdisk"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  10,
+                                          "name":  "Exemple.Media.99.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  1080,
+                                          "modifier":  "rawhd"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      }
+                  ],
+        "minFormatScore":  0,
+        "cutoffFormatScore":  0,
+        "minUpgradeFormatScore":  1,
+        "formatItems":  {
+                            "format":  1,
+                            "name":  "Exemple.Media.98.2024.1080p.WEB-DL-GROUPE",
+                            "score":  -10000
+                        },
+        "language":  {
+                         "id":  2,
+                         "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
+                     },
+        "id":  5
+    },
+    {
+        "name":  "Exemple.Media.100.2024.1080p.WEB-DL-GROUPE",
+        "upgradeAllowed":  false,
+        "cutoff":  2,
+        "items":  [
+                      {
+                          "quality":  {
+                                          "id":  0,
+                                          "name":  "Exemple.Media.69.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "unknown",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  24,
+                                          "name":  "Exemple.Media.70.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "workprint",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  25,
+                                          "name":  "Exemple.Media.71.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "cam",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  26,
+                                          "name":  "Exemple.Media.72.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "telesync",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  27,
+                                          "name":  "Exemple.Media.73.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "telecine",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  29,
+                                          "name":  "Exemple.Media.74.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "regional"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  28,
+                                          "name":  "Exemple.Media.75.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "screener"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  1,
+                                          "name":  "Exemple.Media.76.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  480,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  2,
+                                          "name":  "Exemple.Media.77.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  0,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  23,
+                                          "name":  "Exemple.Media.78.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "dvd",
+                                          "resolution":  480,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "name":  "Exemple.Media.79.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  8,
+                                                            "name":  "Exemple.Media.80.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  480,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  12,
+                                                            "name":  "Exemple.Media.81.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  480,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        }
+                                    ],
+                          "allowed":  false,
+                          "id":  1000
+                      },
+                      {
+                          "quality":  {
+                                          "id":  20,
+                                          "name":  "Exemple.Media.82.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  480,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  21,
+                                          "name":  "Exemple.Media.83.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  576,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  4,
+                                          "name":  "Exemple.Media.84.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  720,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "name":  "Exemple.Media.85.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  5,
+                                                            "name":  "Exemple.Media.86.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  720,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  14,
+                                                            "name":  "Exemple.Media.87.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  720,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  true
+                                        }
+                                    ],
+                          "allowed":  true,
+                          "id":  1001
+                      },
+                      {
+                          "quality":  {
+                                          "id":  6,
+                                          "name":  "Exemple.Media.88.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  720,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  true
+                      },
+                      {
+                          "quality":  {
+                                          "id":  9,
+                                          "name":  "Exemple.Media.89.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  1080,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "name":  "Exemple.Media.90.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  3,
+                                                            "name":  "Exemple.Media.49.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  1080,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  15,
+                                                            "name":  "Exemple.Media.91.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  1080,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        }
+                                    ],
+                          "allowed":  false,
+                          "id":  1002
+                      },
+                      {
+                          "quality":  {
+                                          "id":  7,
+                                          "name":  "Exemple.Media.92.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  30,
+                                          "name":  "Exemple.Media.93.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  16,
+                                          "name":  "Exemple.Media.94.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  2160,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "name":  "Exemple.Media.95.2024.1080p.WEB-DL-GROUPE",
+                          "items":  [
+                                        {
+                                            "quality":  {
+                                                            "id":  18,
+                                                            "name":  "Exemple.Media.58.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webdl",
+                                                            "resolution":  2160,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        },
+                                        {
+                                            "quality":  {
+                                                            "id":  17,
+                                                            "name":  "Exemple.Media.96.2024.1080p.WEB-DL-GROUPE",
+                                                            "source":  "webrip",
+                                                            "resolution":  2160,
+                                                            "modifier":  "none"
+                                                        },
+                                            "items":  null,
+                                            "allowed":  false
+                                        }
+                                    ],
+                          "allowed":  false,
+                          "id":  1003
+                      },
+                      {
+                          "quality":  {
+                                          "id":  19,
+                                          "name":  "Exemple.Media.64.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  2160,
+                                          "modifier":  "none"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  31,
+                                          "name":  "Exemple.Media.97.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  2160,
+                                          "modifier":  "remux"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  22,
+                                          "name":  "Exemple.Media.98.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "bluray",
+                                          "resolution":  1080,
+                                          "modifier":  "brdisk"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      },
+                      {
+                          "quality":  {
+                                          "id":  10,
+                                          "name":  "Exemple.Media.99.2024.1080p.WEB-DL-GROUPE",
+                                          "source":  "tv",
+                                          "resolution":  1080,
+                                          "modifier":  "rawhd"
+                                      },
+                          "items":  null,
+                          "allowed":  false
+                      }
+                  ],
+        "minFormatScore":  0,
+        "cutoffFormatScore":  0,
+        "minUpgradeFormatScore":  1,
+        "formatItems":  {
+                            "format":  1,
+                            "name":  "Exemple.Media.98.2024.1080p.WEB-DL-GROUPE",
+                            "score":  -10000
+                        },
+        "language":  {
+                         "id":  2,
+                         "name":  "Exemple.Media.47.2024.1080p.WEB-DL-GROUPE"
+                     },
+        "id":  7
+    }
+]

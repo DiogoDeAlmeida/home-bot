@@ -1,14 +1,13 @@
 namespace HomelabHub.Abstractions.Capabilities;
 
 /// <summary>
-/// Une opération nommée, invocable depuis l'API REST et/ou Discord.
+/// Une opération nommée, invocable depuis l'API HTTP et/ou un canal conversationnel.
 /// </summary>
 /// <remarks>
 /// C'est l'unité d'écriture d'une fonctionnalité : on l'écrit une fois, les adaptateurs
-/// l'exposent. Ils la <i>découvrent</i>, mais ne la <i>devinent</i> pas — l'exposition
-/// Discord est déclarée explicitement (ADR-0004), parce que les contraintes de Discord
-/// sur les noms, les descriptions et les types d'arguments ne se satisfont pas d'une
-/// projection automatique.
+/// l'exposent. Ils la <i>découvrent</i>, mais ne la <i>devinent</i> pas — l'exposition est
+/// déclarée explicitement (ADR-0004), parce que les contraintes des plateformes sur les noms,
+/// les descriptions et les types d'arguments ne se satisfont pas d'une projection automatique.
 /// </remarks>
 public interface IHubCapability
 {

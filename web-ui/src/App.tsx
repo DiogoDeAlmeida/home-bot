@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { useSession, useSetupState } from '@/api/hooks'
 import { Layout } from '@/components/Layout'
-import { Spinner } from '@/components/ui/primitives'
+import { Center, Loader } from '@/components/ui'
 import { DashboardPage } from '@/pages/Dashboard'
 import { JournalPage } from '@/pages/Journal'
 import { LoginPage } from '@/pages/Login'
@@ -22,11 +22,15 @@ export function App() {
   const setup = useSetupState()
   const session = useSession()
 
-  if (setup.isLoading) return <Spinner label="Connexion au hub…" />
+  if (setup.isLoading || session.isLoading) {
+    return (
+      <Center h="100%">
+        <Loader />
+      </Center>
+    )
+  }
 
   if (setup.data && !setup.data.configured) return <SetupPage />
-
-  if (session.isLoading) return <Spinner />
 
   if (!session.data?.authenticated) return <LoginPage />
 

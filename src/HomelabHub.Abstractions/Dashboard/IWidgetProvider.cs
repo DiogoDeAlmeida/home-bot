@@ -4,12 +4,12 @@ namespace HomelabHub.Abstractions.Dashboard;
 /// Fournit un bloc de données pour le tableau de bord.
 /// </summary>
 /// <remarks>
-/// <b>Données, pas présentation (ADR-0006).</b> Un embed Discord et un composant React n'ont
-/// aucune primitive de mise en page commune ; chercher un modèle de rendu partagé mènerait
-/// soit à un dashboard web indigent, soit à un moteur de layout maison à maintenir. Un widget
-/// expose donc un objet typé et sérialisable, que chaque adaptateur rend à sa façon. Le rendu
-/// Discord d'un widget représente quelques dizaines de lignes par module, et c'est une
-/// duplication assumée.
+/// <b>Données, pas présentation (ADR-0006).</b> Un message de canal conversationnel et un
+/// composant React n'ont aucune primitive de mise en page commune ; chercher un modèle de rendu
+/// partagé mènerait soit à un dashboard web indigent, soit à un moteur de layout maison à
+/// maintenir. Un widget expose donc un objet typé et sérialisable, que chaque adaptateur rend à
+/// sa façon. Le rendu conversationnel d'un widget représente quelques dizaines de lignes par
+/// module, et c'est une duplication assumée.
 /// </remarks>
 public interface IWidgetProvider
 {
@@ -26,15 +26,16 @@ public interface IWidgetProvider
 /// <summary>Description statique d'un widget.</summary>
 /// <param name="Key">Identifiant préfixé par le module : <c>media.queue</c>.</param>
 /// <param name="Title">Titre affiché, en français.</param>
-/// <param name="ShowOnDiscordDashboard">
-/// Inclut le widget dans le message permanent Discord. À réserver à l'essentiel : ce message
-/// est édité en place et doit rester lisible sur mobile.
+/// <param name="ShowOnChatDashboard">
+/// Inclut le widget dans le message de tableau de bord permanent d'un canal conversationnel.
+/// À réserver à l'essentiel : ce message est édité en place et doit rester lisible sur mobile.
+/// Sans nom de plateforme, comme <see cref="Capabilities.CapabilityExposure"/> (ADR-0016).
 /// </param>
 /// <param name="Order">Ordre d'affichage, croissant.</param>
 public sealed record WidgetDescriptor(
     string Key,
     string Title,
-    bool ShowOnDiscordDashboard = false,
+    bool ShowOnChatDashboard = false,
     int Order = 0);
 
 /// <summary>Données d'un widget à un instant donné.</summary>

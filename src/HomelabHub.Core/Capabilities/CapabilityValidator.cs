@@ -4,24 +4,43 @@ using HomelabHub.Abstractions.Capabilities;
 namespace HomelabHub.Core.Capabilities;
 
 /// <summary>
-/// Vérifie qu'une capacité est déclarée de façon cohérente, et qu'elle tient dans les
-/// contraintes de Discord si elle prétend s'y exposer.
+/// Vérifie qu'une capacité est déclarée de façon cohérente et qu'elle tient dans les contraintes
+/// communes aux canaux conversationnels.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Ces contrôles s'exécutent au démarrage et font échouer le processus. C'est délibéré : une
-/// commande Discord silencieusement absente parce que sa description faisait 103 caractères
-/// est le genre de bug qu'on cherche une heure. Autant l'apprendre au premier lancement.
+/// commande silencieusement absente parce que sa description faisait 103 caractères est le genre
+/// de bug qu'on cherche une heure.
+/// </para>
+/// <para>
+/// <b>Partage des responsabilités (ADR-0016).</b> Le noyau valide ce qui est générique : forme
+/// des noms, unicité, cohérence entre exposition et commande, ordre des paramètres. Les limites
+/// propres à une plateforme — profondeur de commande, quotas — appartiennent à son adaptateur et
+/// seront vérifiées par lui. Les seuils ci-dessous encodent la contrainte la plus stricte connue
+/// à ce jour ; ils migreront dans l'adaptateur Discord quand il sera écrit.
+/// </para>
 /// </remarks>
 public static partial class CapabilityValidator
 {
-    /// <summary>Limite Discord sur la longueur d'une description de commande ou d'option.</summary>
-    private const int DiscordDescriptionMaxLength = 100;
+    /// <summary>Longueur maximale d'une description exposée comme commande.</summary>
+    private const int DescriptionMaxLength = 100;
 
-    /// <summary>Limite Discord sur le nombre d'options d'une sous-commande.</summary>
-    private const int DiscordMaxOptions = 25;
+    /// <summary>Nombre maximal de paramètres d'une commande.</summary>
+    private const int MaxParameters = 25;
 
-    /// <summary>Limite Discord sur le nombre de choix d'une option.</summary>
-    private const int DiscordMaxChoices = 25;
+    /// <summary>Nombre maximal de choix d'un paramètre.</summary>
+    private const int MaxChoices = 25;
+
+    /// <summary>
+    /// Profondeur maximale d'un chemin de commande, hors clé de module.
+    /// </summary>
+    /// <remarks>
+    /// Discord plafonne à trois niveaux au total — commande, groupe, sous-commande. La clé du
+    /// module consomme le premier, il en reste deux. Contrainte à déplacer dans l'adaptateur
+    /// Discord à l'étape 3 (ADR-0016).
+    /// </remarks>
+    private const int MaxCommandDepth = 2;
 
     public static IReadOnlyList<string> Validate(string moduleKey, CapabilityDescriptor descriptor)
     {
@@ -40,17 +59,17 @@ public static partial class CapabilityValidator
             errors.Add($"« {name} » : exposition None — la capacité serait injoignable.");
         }
 
-        // La contradiction la plus dangereuse : une capacité restreinte au REST qui déclare
-        // malgré tout une commande Discord. Refuser plutôt que d'arbitrer en silence.
-        if (descriptor.Discord is not null && !descriptor.Exposure.HasFlag(CapabilityExposure.Discord))
+        // La contradiction la plus dangereuse : une capacité restreinte à l'API qui déclare
+        // malgré tout une commande. Refuser plutôt qu'arbitrer en silence.
+        if (descriptor.Command is not null && !descriptor.Exposure.HasFlag(CapabilityExposure.Chat))
         {
-            errors.Add($"« {name} » : un DiscordBinding est déclaré alors que l'exposition " +
-                       "exclut Discord. Retirer le binding, ou élargir l'exposition.");
+            errors.Add($"« {name} » : une commande est déclarée alors que l'exposition exclut les " +
+                       "canaux conversationnels. Retirer la commande, ou élargir l'exposition.");
         }
 
-        if (descriptor.Parameters.Count > DiscordMaxOptions)
+        if (descriptor.Parameters.Count > MaxParameters)
         {
-            errors.Add($"« {name} » : {descriptor.Parameters.Count} paramètres, maximum {DiscordMaxOptions}.");
+            errors.Add($"« {name} » : {descriptor.Parameters.Count} paramètres, maximum {MaxParameters}.");
         }
 
         foreach (var duplicate in descriptor.Parameters
@@ -60,7 +79,7 @@ public static partial class CapabilityValidator
             errors.Add($"« {name} » : paramètre « {duplicate.Key} » déclaré plusieurs fois.");
         }
 
-        // Un paramètre optionnel suivi d'un obligatoire est refusé par l'API Discord.
+        // Un paramètre optionnel suivi d'un obligatoire est refusé par la plupart des API.
         var seenOptional = false;
         foreach (var parameter in descriptor.Parameters)
         {
@@ -71,37 +90,46 @@ public static partial class CapabilityValidator
             else if (seenOptional)
             {
                 errors.Add($"« {name} » : le paramètre obligatoire « {parameter.Name} » suit un " +
-                           "paramètre optionnel ; Discord impose l'ordre inverse.");
+                           "paramètre optionnel ; l'ordre inverse est imposé.");
                 break;
             }
         }
 
-        if (descriptor.Discord is { } binding)
+        if (descriptor.Command is { } command)
         {
-            ValidateDiscordBinding(name, descriptor, binding, errors);
+            ValidateCommand(name, descriptor, command, errors);
         }
 
         return errors;
     }
 
-    private static void ValidateDiscordBinding(string name, CapabilityDescriptor descriptor,
-                                               DiscordBinding binding, List<string> errors)
+    private static void ValidateCommand(string name, CapabilityDescriptor descriptor,
+                                        CommandBinding command, List<string> errors)
     {
-        if (!CommandNamePattern().IsMatch(binding.Name))
+        if (command.Path.Count == 0)
         {
-            errors.Add($"« {name} » : nom de sous-commande « {binding.Name} » invalide " +
-                       "(minuscules, chiffres, tiret et souligné, 1 à 32 caractères).");
+            errors.Add($"« {name} » : chemin de commande vide.");
         }
 
-        if (binding.SubGroup is not null && !CommandNamePattern().IsMatch(binding.SubGroup))
+        if (command.Path.Count > MaxCommandDepth)
         {
-            errors.Add($"« {name} » : nom de groupe « {binding.SubGroup} » invalide.");
+            errors.Add($"« {name} » : chemin de commande à {command.Path.Count} segments, " +
+                       $"maximum {MaxCommandDepth} hors clé de module.");
         }
 
-        if (descriptor.Description.Length > DiscordDescriptionMaxLength)
+        foreach (var segment in command.Path)
+        {
+            if (!CommandNamePattern().IsMatch(segment))
+            {
+                errors.Add($"« {name} » : segment de commande « {segment} » invalide " +
+                           "(minuscules, chiffres, tiret et souligné, 1 à 32 caractères).");
+            }
+        }
+
+        if (descriptor.Description.Length > DescriptionMaxLength)
         {
             errors.Add($"« {name} » : description de {descriptor.Description.Length} caractères, " +
-                       $"maximum {DiscordDescriptionMaxLength} pour une commande Discord.");
+                       $"maximum {DescriptionMaxLength} pour une commande.");
         }
 
         foreach (var parameter in descriptor.Parameters)
@@ -111,15 +139,15 @@ public static partial class CapabilityValidator
                 errors.Add($"« {name} » : nom de paramètre « {parameter.Name} » invalide.");
             }
 
-            if (parameter.Description.Length > DiscordDescriptionMaxLength)
+            if (parameter.Description.Length > DescriptionMaxLength)
             {
                 errors.Add($"« {name} » : description du paramètre « {parameter.Name} » trop longue.");
             }
 
-            if (parameter.Choices is { Count: > DiscordMaxChoices })
+            if (parameter.Choices is { Count: > MaxChoices })
             {
                 errors.Add($"« {name} » : paramètre « {parameter.Name} » a {parameter.Choices.Count} " +
-                           $"choix, maximum {DiscordMaxChoices}.");
+                           $"choix, maximum {MaxChoices}.");
             }
         }
     }

@@ -10,20 +10,32 @@ import {
 import type { HealthState, ModuleSummary } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
 import { SchemaForm } from '@/components/SchemaForm'
-import { Alert, Badge, Button, Card, Spinner, Toggle } from '@/components/ui/primitives'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Code,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Switch,
+  Text,
+} from '@/components/ui'
 
-const HEALTH: Record<HealthState, { label: string; tone: 'neutral' | 'ok' | 'warn' | 'bad' }> = {
-  0: { label: 'inconnu', tone: 'neutral' },
-  1: { label: 'opérationnel', tone: 'ok' },
-  2: { label: 'dégradé', tone: 'warn' },
-  3: { label: 'en panne', tone: 'bad' },
-  4: { label: 'désactivé', tone: 'neutral' },
+const HEALTH: Record<HealthState, { label: string; color: string }> = {
+  0: { label: 'inconnu', color: 'gray' },
+  1: { label: 'opérationnel', color: 'green' },
+  2: { label: 'dégradé', color: 'yellow' },
+  3: { label: 'en panne', color: 'red' },
+  4: { label: 'désactivé', color: 'gray' },
 }
 
 export function ModulesPage() {
   const modules = useModules()
 
-  if (modules.isLoading) return <Spinner />
+  if (modules.isLoading) return <Loader />
 
   return (
     <>
@@ -31,9 +43,9 @@ export function ModulesPage() {
         title="Modules"
         subtitle="Activation, santé et configuration. Le formulaire est généré depuis le schéma déclaré par chaque module."
       />
-      <div className="space-y-4">
+      <Stack gap="md">
         {modules.data?.map((module) => <ModuleCard key={module.key} module={module} />)}
-      </div>
+      </Stack>
     </>
   )
 }
@@ -47,60 +59,67 @@ function ModuleCard({ module }: { module: ModuleSummary }) {
 
   return (
     <Card>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-medium">{module.displayName}</h2>
-            <code className="font-mono text-xs text-ink-muted">/{module.key}</code>
-            <Badge tone={module.isActive ? status.tone : 'neutral'}>
+      <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
+        <Stack gap={4} style={{ flex: 1, minWidth: 240 }}>
+          <Group gap="xs" wrap="wrap">
+            <Text fw={500}>{module.displayName}</Text>
+            <Code>{module.key}</Code>
+            <Badge variant="light" color={module.isActive ? status.color : 'gray'}>
               {module.isActive ? status.label : 'inactif'}
             </Badge>
-          </div>
-          <p className="mt-1 text-sm text-ink-muted">{module.description}</p>
-          <p className="mt-2 text-xs text-ink-muted">
+          </Group>
+          <Text size="sm" c="dimmed">
+            {module.description}
+          </Text>
+          <Text size="xs" c="dimmed">
             {module.capabilities} capacité{module.capabilities > 1 ? 's' : ''} · {module.pollers}{' '}
             poller{module.pollers > 1 ? 's' : ''}
             {module.webhooks.length > 0 && ` · webhooks : ${module.webhooks.join(', ')}`}
-          </p>
-        </div>
+          </Text>
+        </Stack>
 
-        <div className="flex items-center gap-3">
-          <Toggle
-            label={`Activer ${module.displayName}`}
+        <Group gap="sm">
+          <Switch
+            aria-label={`Activer ${module.displayName}`}
             checked={module.enabled}
             disabled={setEnabled.isPending}
-            onCheckedChange={(value) => setEnabled.mutate(value)}
+            onChange={(event) => setEnabled.mutate(event.currentTarget.checked)}
           />
-          <Button variant="secondary" size="sm" onClick={() => setOpen((value) => !value)}>
+          <Button variant="default" size="compact-sm" onClick={() => setOpen((value) => !value)}>
             {open ? 'Fermer' : 'Configurer'}
           </Button>
-        </div>
-      </div>
+        </Group>
+      </Group>
 
       {module.blockedReason && (
-        <div className="mt-3">
-          <Alert tone="warn">{module.blockedReason}</Alert>
-        </div>
+        <Alert color="yellow" variant="light" mt="sm">
+          {module.blockedReason}
+        </Alert>
       )}
 
       {module.isActive && health.data && health.data.services.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-ink-muted">
+        <Stack gap={4} mt="sm">
           {health.data.services.map((service) => (
-            <li key={service.name} className="flex items-baseline justify-between gap-3">
-              <span>
-                <Badge tone={HEALTH[service.state].tone}>{HEALTH[service.state].label}</Badge>{' '}
-                {service.name}
-              </span>
-              <span>{service.message}</span>
-            </li>
+            <Group key={service.name} justify="space-between" gap="md">
+              <Group gap="xs">
+                <Badge size="xs" variant="light" color={HEALTH[service.state].color}>
+                  {HEALTH[service.state].label}
+                </Badge>
+                <Text size="xs">{service.name}</Text>
+              </Group>
+              <Text size="xs" c="dimmed">
+                {service.message}
+              </Text>
+            </Group>
           ))}
-        </ul>
+        </Stack>
       )}
 
       {open && (
-        <div className="mt-5 border-t border-border-subtle pt-5">
+        <>
+          <Divider my="lg" />
           <ModuleConfig moduleKey={module.key} />
-        </div>
+        </>
       )}
     </Card>
   )
@@ -112,10 +131,20 @@ function ModuleConfig({ moduleKey }: { moduleKey: string }) {
   const surface = useConfigSurface(path, queryKey)
   const save = useSaveConfig(path, queryKey)
 
-  if (surface.isLoading) return <Spinner />
-  if (!surface.data) return <Alert tone="bad">Configuration illisible.</Alert>
+  if (surface.isLoading) return <Loader size="sm" />
+  if (!surface.data) {
+    return (
+      <Alert color="red" variant="light">
+        Configuration illisible.
+      </Alert>
+    )
+  }
   if (surface.data.fields.length === 0) {
-    return <p className="text-sm text-ink-muted">Ce module n'expose aucun réglage.</p>
+    return (
+      <Text size="sm" c="dimmed">
+        Ce module n'expose aucun réglage.
+      </Text>
+    )
   }
 
   return (

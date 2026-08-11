@@ -7,10 +7,12 @@ namespace HomelabHub.Abstractions.Capabilities;
 /// </summary>
 /// <param name="CapabilityKey">Capacité invoquée.</param>
 /// <param name="Arguments">Arguments déjà validés contre <see cref="CapabilityDescriptor.Parameters"/>.</param>
-/// <param name="Source">Adaptateur d'origine — utile pour adapter la verbosité, jamais pour décider d'un droit.</param>
+/// <param name="Source">Genre de surface — utile pour adapter la verbosité, jamais pour décider d'un droit.</param>
 /// <param name="ActorId">
-/// Identité de l'appelant : identifiant Discord, ou <c>"web:admin"</c>. Sert au journal
-/// d'audit des <see cref="CapabilityKind.Mutation"/>.
+/// Identité opaque de l'appelant, préfixée par l'adaptateur : <c>"discord:123456"</c>,
+/// <c>"web:admin"</c>. Le noyau ne l'interprète jamais ; il la journalise pour l'audit des
+/// <see cref="CapabilityKind.Mutation"/>. C'est ce qui permet d'ajouter un adaptateur sans
+/// toucher au modèle d'identité (ADR-0016).
 /// </param>
 /// <param name="IsAdministrator">
 /// Autorisation déjà tranchée par le noyau. Une capacité n'a pas à la revérifier ; le champ
@@ -42,18 +44,25 @@ public sealed record CapabilityInvocation(
             : fallback;
 }
 
-/// <summary>Adaptateur ayant émis l'appel.</summary>
+/// <summary>Nature de la surface ayant émis l'appel.</summary>
+/// <remarks>
+/// Sans nom de plateforme (ADR-0016) : ce qui compte pour le noyau est le <i>genre</i> de
+/// surface, pas son nom commercial. Le nom concret de l'adaptateur, lui, voyage dans
+/// <see cref="CapabilityInvocation.ActorId"/> et sert au journal d'audit.
+/// </remarks>
 public enum InvocationSource
 {
-    /// <summary>API REST de l'interface web.</summary>
-    Rest = 0,
+    /// <summary>API HTTP de l'interface web.</summary>
+    Api = 0,
 
-    /// <summary>Slash command Discord.</summary>
-    DiscordCommand = 1,
+    /// <summary>Commande tapée dans un canal conversationnel.</summary>
+    ChatCommand = 1,
 
-    /// <summary>Bouton d'un message Discord. Aucune permission native côté Discord : le
-    /// contrôle d'accès du noyau est ici la seule protection.</summary>
-    DiscordComponent = 2,
+    /// <summary>
+    /// Bouton d'un message. Les plateformes conversationnelles n'offrent en général aucun
+    /// contrôle d'accès sur ces contrôles : la vérification du noyau est ici la seule protection.
+    /// </summary>
+    ChatButton = 2,
 
     /// <summary>Déclenchement interne (planificateur, réaction à une anomalie).</summary>
     Internal = 3,

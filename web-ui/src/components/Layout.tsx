@@ -1,7 +1,6 @@
 import { NavLink, Outlet } from 'react-router'
 import { useLogout } from '@/api/hooks'
-import { Button } from '@/components/ui/primitives'
-import { cn } from '@/lib/utils'
+import { Anchor, Button, Container, Group, Stack, Text, Title } from '@/components/ui'
 
 const NAV = [
   { to: '/', label: 'Tableau de bord', end: true },
@@ -14,45 +13,60 @@ export function Layout() {
   const logout = useLogout()
 
   return (
-    <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4">
-      <header className="flex flex-wrap items-center gap-4 border-b border-border-subtle py-4">
-        <span className="text-lg font-semibold tracking-tight">Homelab Hub</span>
+    <Container size="lg" py="md">
+      <Group
+        justify="space-between"
+        align="center"
+        wrap="wrap"
+        pb="md"
+        mb="lg"
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+      >
+        <Group gap="lg" wrap="wrap">
+          <Text fw={600} size="lg">
+            Homelab Hub
+          </Text>
+          <Group gap="md">
+            {NAV.map((item) => (
+              <Anchor
+                key={item.to}
+                component={NavLink}
+                to={item.to}
+                end={item.end}
+                size="sm"
+                underline="never"
+                c="dimmed"
+                style={({ isActive }: { isActive: boolean }) =>
+                  isActive ? { color: 'var(--mantine-color-text)', fontWeight: 600 } : undefined
+                }
+              >
+                {item.label}
+              </Anchor>
+            ))}
+          </Group>
+        </Group>
 
-        <nav className="flex flex-1 flex-wrap gap-1">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-md px-3 py-1.5 text-sm transition-colors',
-                  isActive ? 'bg-surface text-ink shadow-xs' : 'text-ink-muted hover:text-ink',
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <Button variant="ghost" size="sm" onClick={() => logout.mutate()}>
+        <Button variant="subtle" size="compact-sm" onClick={() => logout.mutate()}>
           Déconnexion
         </Button>
-      </header>
+      </Group>
 
-      <main className="flex-1 py-6">
-        <Outlet />
-      </main>
-    </div>
+      <Outlet />
+    </Container>
   )
 }
 
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="mb-5">
-      <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-ink-muted">{subtitle}</p>}
-    </div>
+    <Stack gap={4} mb="lg">
+      <Title order={2} size="h3">
+        {title}
+      </Title>
+      {subtitle && (
+        <Text size="sm" c="dimmed">
+          {subtitle}
+        </Text>
+      )}
+    </Stack>
   )
 }

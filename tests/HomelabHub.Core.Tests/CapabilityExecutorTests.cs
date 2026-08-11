@@ -8,13 +8,14 @@ namespace HomelabHub.Core.Tests;
 
 /// <summary>
 /// L'autorisation est décidée ici et nulle part ailleurs (ADR-0004). Ces tests sont la seule
-/// preuve que les boutons Discord — qui n'ont aucune permission native — sont protégés.
+/// preuve que les boutons d'un canal conversationnel — qui n'ont aucune permission native —
+/// sont protégés.
 /// </summary>
 public sealed class CapabilityExecutorTests
 {
     private const string QueryKey = "system.status";
     private const string MutationKey = "system.restart";
-    private const string RestOnlyKey = "system.backup.create";
+    private const string ApiOnlyKey = "system.backup.create";
 
     private static CapabilityExecutor NewExecutor(bool moduleActive = true) =>
         new(new FakeRegistry(), new FakeModules(moduleActive), NullLogger<CapabilityExecutor>.Instance);
@@ -27,19 +28,19 @@ public sealed class CapabilityExecutorTests
     public async Task Une_mutation_appelee_par_un_non_administrateur_est_refusee()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke(MutationKey, InvocationSource.DiscordCommand, admin: false), TestContext.Current.CancellationToken);
+            Invoke(MutationKey, InvocationSource.ChatCommand, admin: false), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
         Assert.Contains("administrateurs", result.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task Une_mutation_declenchee_par_un_bouton_Discord_est_soumise_au_meme_controle()
+    public async Task Une_mutation_declenchee_par_un_bouton_est_soumise_au_meme_controle()
     {
-        // Discord n'offre aucune permission sur les composants de message : sans cette
-        // vérification, n'importe quel membre voyant le dashboard pourrait cliquer.
+        // Les plateformes conversationnelles n'offrent aucune permission sur les boutons :
+        // sans cette vérification, n'importe quel membre voyant le dashboard pourrait cliquer.
         var result = await NewExecutor().ExecuteAsync(
-            Invoke(MutationKey, InvocationSource.DiscordComponent, admin: false), TestContext.Current.CancellationToken);
+            Invoke(MutationKey, InvocationSource.ChatButton, admin: false), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
     }
@@ -48,26 +49,26 @@ public sealed class CapabilityExecutorTests
     public async Task Une_mutation_appelee_par_un_administrateur_passe()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke(MutationKey, InvocationSource.DiscordCommand, admin: true), TestContext.Current.CancellationToken);
+            Invoke(MutationKey, InvocationSource.ChatCommand, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Ok, result.Outcome);
     }
 
     [Fact]
-    public async Task Une_capacite_restreinte_au_REST_refuse_un_appel_Discord()
+    public async Task Une_capacite_restreinte_a_lAPI_refuse_un_appel_conversationnel()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke(RestOnlyKey, InvocationSource.DiscordCommand, admin: true), TestContext.Current.CancellationToken);
+            Invoke(ApiOnlyKey, InvocationSource.ChatCommand, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
         Assert.Contains("cette interface", result.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task La_meme_capacite_passe_depuis_le_REST()
+    public async Task La_meme_capacite_passe_depuis_lAPI()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke(RestOnlyKey, InvocationSource.Rest, admin: true), TestContext.Current.CancellationToken);
+            Invoke(ApiOnlyKey, InvocationSource.Api, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Ok, result.Outcome);
     }
@@ -76,7 +77,7 @@ public sealed class CapabilityExecutorTests
     public async Task Un_module_inactif_refuse_ses_capacites()
     {
         var result = await NewExecutor(moduleActive: false).ExecuteAsync(
-            Invoke(QueryKey, InvocationSource.Rest, admin: true), TestContext.Current.CancellationToken);
+            Invoke(QueryKey, InvocationSource.Api, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
     }
@@ -85,7 +86,7 @@ public sealed class CapabilityExecutorTests
     public async Task Une_capacite_inconnue_echoue_proprement()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke("media.queue.list", InvocationSource.Rest, admin: true), TestContext.Current.CancellationToken);
+            Invoke("media.queue.list", InvocationSource.Api, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
         Assert.Contains("inconnue", result.Message, StringComparison.Ordinal);
@@ -97,7 +98,7 @@ public sealed class CapabilityExecutorTests
         // Convention §14 : une capacité qui explose dégrade la réponse, elle ne fait pas
         // tomber le hub et n'expose pas de pile d'appels.
         var result = await NewExecutor().ExecuteAsync(
-            Invoke("system.boom", InvocationSource.Rest, admin: true), TestContext.Current.CancellationToken);
+            Invoke("system.boom", InvocationSource.Api, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
         Assert.DoesNotContain("Exception", result.Message, StringComparison.Ordinal);
@@ -107,7 +108,7 @@ public sealed class CapabilityExecutorTests
     public async Task Un_parametre_obligatoire_manquant_est_refuse_avant_execution()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke("system.echo", InvocationSource.Rest, admin: true), TestContext.Current.CancellationToken);
+            Invoke("system.echo", InvocationSource.Api, admin: true), TestContext.Current.CancellationToken);
 
         Assert.Equal(CapabilityOutcome.Failed, result.Outcome);
         Assert.Contains("obligatoire", result.Message, StringComparison.Ordinal);
@@ -117,7 +118,7 @@ public sealed class CapabilityExecutorTests
     public async Task Un_argument_non_declare_est_ignore()
     {
         var result = await NewExecutor().ExecuteAsync(
-            Invoke("system.echo", InvocationSource.Rest, admin: true, new Dictionary<string, object?>
+            Invoke("system.echo", InvocationSource.Api, admin: true, new Dictionary<string, object?>
             {
                 ["texte"] = "bonjour",
                 ["injecté"] = "ne doit pas passer",
@@ -136,7 +137,7 @@ public sealed class CapabilityExecutorTests
         [
             Wrap(new StubCapability(QueryKey, CapabilityKind.Query, CapabilityExposure.All)),
             Wrap(new StubCapability(MutationKey, CapabilityKind.Mutation, CapabilityExposure.All)),
-            Wrap(new StubCapability(RestOnlyKey, CapabilityKind.Mutation, CapabilityExposure.Rest)),
+            Wrap(new StubCapability(ApiOnlyKey, CapabilityKind.Mutation, CapabilityExposure.Api)),
             Wrap(new ThrowingCapability()),
             Wrap(new EchoCapability()),
         ];

@@ -22,7 +22,7 @@ internal static class CapabilityEndpoints
 
         capabilities.MapGet("/", (ICapabilityRegistry registry) => Results.Ok(
             registry.All
-                .Where(c => c.Descriptor.Exposure.HasFlag(CapabilityExposure.Rest))
+                .Where(c => c.Descriptor.Exposure.HasFlag(CapabilityExposure.Api))
                 .Select(c => new
                 {
                     c.ModuleKey,
@@ -31,11 +31,12 @@ internal static class CapabilityEndpoints
                     c.Descriptor.Description,
                     kind = c.Descriptor.Kind.ToString(),
                     exposure = c.Descriptor.Exposure.ToString(),
-                    discord = c.Descriptor.Discord is null
+                    c.Descriptor.RequireConfirmation,
+                    // Chemin neutre : chaque adaptateur l'épelle dans sa syntaxe (ADR-0016).
+                    // L'interface web l'affiche à titre indicatif.
+                    command = c.Descriptor.Command is null
                         ? null
-                        : string.Join(' ',
-                            new[] { "/" + c.ModuleKey, c.Descriptor.Discord.SubGroup, c.Descriptor.Discord.Name }
-                                .Where(part => !string.IsNullOrEmpty(part))),
+                        : string.Join(' ', new[] { c.ModuleKey }.Concat(c.Descriptor.Command.Path)),
                     parameters = c.Descriptor.Parameters.Select(p => new
                     {
                         p.Name,
@@ -58,7 +59,7 @@ internal static class CapabilityEndpoints
             var invocation = new CapabilityInvocation(
                 CapabilityKey: key,
                 Arguments: arguments,
-                Source: InvocationSource.Rest,
+                Source: InvocationSource.Api,
                 ActorId: "web:admin",
                 IsAdministrator: true);
 

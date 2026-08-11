@@ -80,7 +80,8 @@ export interface CapabilitySummary {
   description: string
   kind: 'Query' | 'Mutation'
   exposure: string
-  discord: string | null
+  requireConfirmation: boolean
+  command: string | null
   parameters: {
     name: string
     description: string

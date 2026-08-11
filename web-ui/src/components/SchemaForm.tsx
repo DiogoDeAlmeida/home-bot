@@ -1,7 +1,20 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import {
+  Alert,
+  Badge,
+  Button,
+  Group,
+  MultiSelect,
+  NumberInput,
+  PasswordInput,
+  Select,
+  Stack,
+  Switch,
+  TagsInput,
+  Text,
+  TextInput,
+} from '@mantine/core'
 import type { ConfigField, ConfigSurface } from '@/api/types'
-import { Alert, Badge, Button, Input, Label, Select, Toggle } from '@/components/ui/primitives'
-import { cn } from '@/lib/utils'
 
 /**
  * Génère un formulaire à partir d'un schéma servi par le serveur.
@@ -10,6 +23,11 @@ import { cn } from '@/lib/utils'
  * ligne de TypeScript : le serveur décrit ses champs, ce composant les rend. Il sert
  * indifféremment la configuration d'un module et les réglages du hub — même contrat, même code
  * (ADR-0013).
+ *
+ * **C'est aussi le seul fichier qui connaisse Mantine en profondeur.** Chaque `ConfigFieldKind`
+ * s'adosse à un composant accessible et éprouvé — c'est ce qui a motivé l'abandon des primitives
+ * écrites à la main : `Select`, `MultiSelect` et `TagsInput` demandent une navigation clavier et
+ * une gestion du focus qu'on n'a aucune raison de réimplémenter.
  *
  * Deux règles gouvernent la soumission :
  *
@@ -70,36 +88,50 @@ export function SchemaForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5">
-      {surface.fields.map((field) => (
-        <Field
-          key={field.key}
-          field={field}
-          value={values[field.key] ?? ''}
-          blockedBy={unmetDependencies(field, values)}
-          onChange={(value) => update(field.key, value)}
-        />
-      ))}
+    <form onSubmit={submit}>
+      <Stack gap="md">
+        {surface.fields.map((field) => (
+          <Field
+            key={field.key}
+            field={field}
+            value={values[field.key] ?? ''}
+            blockedBy={unmetDependencies(field, values)}
+            onChange={(value) => update(field.key, value)}
+          />
+        ))}
 
-      {missingRequired.length > 0 && (
-        <Alert tone="warn">
-          Champs obligatoires à renseigner : {missingRequired.map((f) => f.label).join(', ')}.
-        </Alert>
-      )}
-
-      {error && <Alert tone="bad">{error}</Alert>}
-      {saved && dirty.size === 0 && !error && <Alert tone="ok">Configuration enregistrée.</Alert>}
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={saving || dirty.size === 0 || missingRequired.length > 0}>
-          {saving ? 'Enregistrement…' : 'Enregistrer'}
-        </Button>
-        {dirty.size > 0 && (
-          <span className="text-xs text-ink-muted">
-            {dirty.size} champ{dirty.size > 1 ? 's' : ''} modifié{dirty.size > 1 ? 's' : ''}
-          </span>
+        {missingRequired.length > 0 && (
+          <Alert color="yellow" variant="light">
+            Champs obligatoires à renseigner : {missingRequired.map((f) => f.label).join(', ')}.
+          </Alert>
         )}
-      </div>
+
+        {error && (
+          <Alert color="red" variant="light">
+            {error}
+          </Alert>
+        )}
+        {saved && dirty.size === 0 && !error && (
+          <Alert color="green" variant="light">
+            Configuration enregistrée.
+          </Alert>
+        )}
+
+        <Group>
+          <Button
+            type="submit"
+            loading={saving}
+            disabled={dirty.size === 0 || missingRequired.length > 0}
+          >
+            Enregistrer
+          </Button>
+          {dirty.size > 0 && (
+            <Text size="xs" c="dimmed">
+              {dirty.size} champ{dirty.size > 1 ? 's' : ''} modifié{dirty.size > 1 ? 's' : ''}
+            </Text>
+          )}
+        </Group>
+      </Stack>
     </form>
   )
 }
@@ -121,147 +153,143 @@ function Field({
   blockedBy: string[]
   onChange: (value: string) => void
 }) {
-  const id = `field-${field.key}`
+  // ADR-0011 : le contrat porte OptionsFrom, le front ne le résout pas encore. Le dire
+  // explicitement vaut mieux qu'un champ texte inexpliqué là où on attend une liste.
+  const unresolvedOptions = Boolean(field.optionsFrom) && !field.options
+  const description = [
+    field.help,
+    unresolvedOptions
+      ? `Saisie manuelle : la liste alimentée par ${field.optionsFrom} n'est pas encore implémentée.` +
+        (blockedBy.length > 0 ? ` Dépend de : ${blockedBy.join(', ')}.` : '')
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-2">
-        <Label htmlFor={id}>{field.label}</Label>
-        {field.required && <Badge tone="warn">obligatoire</Badge>}
-        {field.secret && <Badge tone="neutral">secret</Badge>}
-      </div>
-
-      <Control field={field} id={id} value={value} blockedBy={blockedBy} onChange={onChange} />
-
-      {field.help && <p className="text-xs text-ink-muted">{field.help}</p>}
-
-      {field.secret && field.value && (
-        <p className="text-xs text-ink-muted">
-          Valeur enregistrée : <code className="font-mono">{field.value}</code>. Laisser vide pour
-          la conserver.
-        </p>
+  const label = (
+    <Group gap="xs">
+      <span>{field.label}</span>
+      {field.secret && (
+        <Badge size="xs" variant="light" color="gray">
+          secret
+        </Badge>
       )}
-
-      {/* ADR-0011 : le contrat porte OptionsFrom, le front ne le résout pas encore. Le dire
-          explicitement vaut mieux qu'un champ texte inexpliqué là où on attend une liste. */}
-      {field.optionsFrom && !field.options && (
-        <p className="text-xs text-ink-muted">
-          Saisie manuelle : la liste déroulante alimentée par{' '}
-          <code className="font-mono">{field.optionsFrom}</code> n'est pas encore implémentée.
-          {blockedBy.length > 0 && ` Dépend de : ${blockedBy.join(', ')}.`}
-        </p>
-      )}
-    </div>
+    </Group>
   )
-}
 
-function Control({
-  field,
-  id,
-  value,
-  blockedBy,
-  onChange,
-}: {
-  field: ConfigField
-  id: string
-  value: string
-  blockedBy: string[]
-  onChange: (value: string) => void
-}) {
+  const common = {
+    label,
+    description: description || undefined,
+    required: field.required,
+  }
+
   switch (field.kind) {
     case 'Boolean':
       return (
-        <div className="flex h-9 items-center">
-          <Toggle
-            label={field.label}
-            checked={value === 'true'}
-            onCheckedChange={(next) => onChange(String(next))}
-          />
-        </div>
+        <Switch
+          {...common}
+          checked={value === 'true'}
+          onChange={(event) => onChange(String(event.currentTarget.checked))}
+        />
       )
 
     case 'Secret':
       return (
-        <Input
-          id={id}
-          type="password"
+        <PasswordInput
+          {...common}
           autoComplete="new-password"
           value={value}
           placeholder={field.value ?? 'Non renseigné'}
-          onChange={(event) => onChange(event.target.value)}
+          description={
+            field.value
+              ? `${description} Valeur enregistrée : ${field.value}. Laisser vide pour la conserver.`.trim()
+              : common.description
+          }
+          onChange={(event) => onChange(event.currentTarget.value)}
         />
       )
 
     case 'Integer':
       return (
-        <Input
-          id={id}
-          type="number"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
+        <NumberInput
+          {...common}
+          value={value === '' ? '' : Number(value)}
+          onChange={(next) => onChange(String(next))}
         />
       )
 
     case 'Duration':
       return (
-        <div className="flex items-center gap-2">
-          <Input
-            id={id}
-            type="number"
-            min={1}
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            className="w-32"
-          />
-          <span className="text-sm text-ink-muted">secondes</span>
-        </div>
+        <NumberInput
+          {...common}
+          min={1}
+          suffix=" s"
+          value={value === '' ? '' : Number(value)}
+          onChange={(next) => onChange(String(next))}
+        />
       )
 
     case 'Url':
       return (
-        <Input
-          id={id}
+        <TextInput
+          {...common}
           type="url"
           inputMode="url"
-          placeholder="http://192.168.1.10:7878"
+          placeholder="http://192.168.1.233:7878"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => onChange(event.currentTarget.value)}
         />
       )
 
     case 'Select':
-      // Options figées : vraie liste. Options dynamiques non résolues : saisie libre (ADR-0011).
+      // Options figées : vraie liste déroulante. Options dynamiques non résolues : saisie libre.
       return field.options ? (
-        <Select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
-          {!field.required && <option value="">—</option>}
-          {field.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+        <Select
+          {...common}
+          data={field.options.map((option) => ({ value: option.value, label: option.label }))}
+          value={value || null}
+          clearable={!field.required}
+          onChange={(next) => onChange(next ?? '')}
+        />
       ) : (
-        <Input
-          id={id}
+        <TextInput
+          {...common}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
           disabled={blockedBy.length > 0}
+          onChange={(event) => onChange(event.currentTarget.value)}
         />
       )
 
-    case 'MultiSelect':
-      return (
-        <Input
-          id={id}
-          value={value}
-          placeholder="valeurs séparées par des virgules"
-          onChange={(event) => onChange(event.target.value)}
+    case 'MultiSelect': {
+      const selected = value ? value.split(',').filter(Boolean) : []
+      return field.options ? (
+        <MultiSelect
+          {...common}
+          data={field.options.map((option) => ({ value: option.value, label: option.label }))}
+          value={selected}
           disabled={blockedBy.length > 0}
-          className={cn(blockedBy.length > 0 && 'opacity-60')}
+          searchable
+          onChange={(next) => onChange(next.join(','))}
+        />
+      ) : (
+        // Sans liste à proposer, TagsInput reste le bon composant : saisie libre, mais les
+        // valeurs restent des jetons manipulables au clavier plutôt qu'une chaîne à virgules.
+        <TagsInput
+          {...common}
+          value={selected}
+          disabled={blockedBy.length > 0}
+          onChange={(next) => onChange(next.join(','))}
         />
       )
+    }
 
     default:
-      return <Input id={id} value={value} onChange={(event) => onChange(event.target.value)} />
+      return (
+        <TextInput
+          {...common}
+          value={value}
+          onChange={(event) => onChange(event.currentTarget.value)}
+        />
+      )
   }
 }
