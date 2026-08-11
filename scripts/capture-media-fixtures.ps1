@@ -66,11 +66,17 @@ function Get-Signature {
 
     switch ($Source) {
         'qbittorrent' {
-            return (($parsed | ForEach-Object { "$($_.hash):$($_.state):$([math]::Round($_.progress, 2))" }) -join '|')
+            # La progression est délibérément absente : l'inclure faisait écrire un fichier
+            # toutes les cinq secondes pendant tout un téléchargement, pour du bruit. Seul le
+            # changement d'état compte (downloading, stalledDL, uploading, pausedUP…).
+            return (($parsed | ForEach-Object { "$($_.hash):$($_.state)" }) -join '|')
         }
         'seerr' {
+            # Le statut de chaque entrée de downloadStatus, pas seulement leur nombre : sinon la
+            # vue de Seerr n'est jamais recapturée pendant qu'elle évolue.
             return (($parsed.results | ForEach-Object {
-                "$($_.id):$($_.status):$($_.media.status):$($_.media.downloadStatus.Count)"
+                $dl = ($_.media.downloadStatus | ForEach-Object { $_.status }) -join ','
+                "$($_.id):$($_.status):$($_.media.status):$dl"
             }) -join '|')
         }
         default {

@@ -52,6 +52,64 @@ décision : c'est le **moteur d'anomalies** qui portera cette durée, pas `Media
 
 ## Conséquence sur le modèle
 
-`MediaJourney (1) ── (0..N) DownloadItem`, avec un parcours capable d'exister sans requête amont
-(import manuel) et sans torrent aval (média déjà présent). Ces cas ne sont pas des exceptions à
-traiter : ils tombent naturellement d'une jointure qui n'exige rien.
+**Amendé le 11 août 2026, après capture d'un cycle complet sur les instances réelles.** La
+multiplicité initialement posée était incomplète : il y a un troisième niveau.
+
+```
+MediaJourney (1) ── (0..N) DownloadItem ── (1..N) QueueEntry
+                             │                       │
+                             └ un downloadId          └ un épisode
+```
+
+Un pack de saison observé en conditions réelles produit **22 enregistrements de file pour un
+seul torrent** — un par épisode, tous portant le même `downloadId` et la **même `size`
+répétée**. Deux packs simultanés donnaient 44 enregistrements pour 2 torrents.
+
+**Le regroupement par `downloadId` doit donc être la première opération de la corrélation**,
+avant toute agrégation. Mesuré sur ces données :
+
+| Agrégation | Résultat |
+|---|---|
+| Somme des `size` de tous les enregistrements | 451 022 706 508 octets — **faux, facteur 22** |
+| Somme après regroupement par `downloadId` | 20 501 032 114 octets — correct |
+
+Un tableau de bord naïf aurait annoncé 451 Go en cours et 44 téléchargements. Aucun mock écrit à
+la main n'aurait révélé ça.
+
+Le parcours reste capable d'exister sans requête amont (import manuel) et sans torrent aval
+(média déjà présent) : ces cas tombent d'une jointure qui n'exige rien.
+
+## Deux pièges de détection, constatés et non supposés
+
+**1. `status = warning` dès la première seconde.** Un torrent fraîchement récupéré, avant tout
+contact avec un pair, remonte `errorMessage: "The download is stalled with no connections"` —
+alors que `trackedDownloadStatus` vaut `ok`. Un détecteur de blocage naïf se déclencherait sur
+**chaque nouveau téléchargement**.
+
+Conséquences pour l'étape 4 : l'axe de santé est `trackedDownloadStatus`, pas `status`, qui est
+un résumé conflant l'erreur transitoire. Et un téléchargement n'est « bloqué » que s'il a
+d'abord progressé (`sizeleft < size`) ou s'il dure depuis un délai de grâce compté à partir de
+`added`.
+
+**2. `importPending` dure moins de cinq secondes.** Les deux packs y sont passés entre deux
+échantillons espacés de 5 s ; le film n'y a jamais été vu. Avec des hardlinks, l'import est
+quasi instantané.
+
+Conséquence : **on ne détecte pas un import bloqué en cherchant `importPending` au polling.**
+À 60 secondes d'intervalle, on ne le voit jamais dans le cas nominal. La logique est donc
+inversée : *voir* `importPending` sur un cycle est déjà en soi le signal, sans seuil de durée.
+Ce qui confirme le choix de câbler l'anomalie sur le déclencheur `Manual Interaction Required`
+plutôt que sur un `importPending` qui traîne.
+
+## Corollaire : ne pas s'appuyer sur la corrélation de Seerr
+
+Seerr expose son propre `media.downloadStatus`. Confronté aux mêmes instants :
+
+- il porte **le même défaut de duplication** — 10 entrées pour un seul titre et un seul
+  `externalId` ;
+- il **diverge de Sonarr** : saison 1 en `warning` avec `sizeLeft == size` côté Seerr, pendant
+  que Sonarr téléchargeait activement la saison 2.
+
+Il expose en revanche un champ `downloadId` utile pour relier une requête à un torrent sans
+passer par la file. **Commodité, jamais source de vérité** : le hub ne doit avoir raison contre
+personne, mais il n'a pas à hériter des approximations d'un tiers.
