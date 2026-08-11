@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Modules.SystemModule</RootNamespace>
+  </PropertyGroup>
+
+  <!-- RÈGLE STRUCTURANTE (ADR-0010) : un module ne référence QUE HomelabHub.Abstractions.
+       Ajouter ici une référence vers Core, Infrastructure, Discord ou Host signifie que
+       l'abstraction ne suffit pas — c'est l'abstraction qu'il faut corriger, pas la
+       référence qu'il faut ajouter. Le test d'architecture fait échouer la CI. -->
+  <ItemGroup>
+    <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

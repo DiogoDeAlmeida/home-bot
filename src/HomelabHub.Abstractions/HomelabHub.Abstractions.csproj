@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Abstractions</RootNamespace>
+  </PropertyGroup>
+
+  <!-- RÈGLE STRUCTURANTE (ADR-0010) : ce projet ne référence AUCUN autre projet
+       de la solution, et rien hors Microsoft.Extensions.*. C'est la seule chose
+       qu'un module a le droit de connaître. Toute dépendance ajoutée ici est
+       imposée à tous les modules futurs — y réfléchir à deux fois.
+       Le test d'architecture garde cette règle en CI. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
+</Project>

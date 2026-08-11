@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Modules.Media.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\HomelabHub.Modules.Media\HomelabHub.Modules.Media.csproj" />
+  </ItemGroup>
+
+  <!-- WireMock.Net sera ajouté à l'étape 3, avec des réponses capturées sur l'installation
+       cible (Radarr 6.3.0, Sonarr 4.0.19, Seerr 3.4.1, qBittorrent 5.1.0) et anonymisées. -->
+
+</Project>

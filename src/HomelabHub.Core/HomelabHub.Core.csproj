@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

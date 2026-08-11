@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Discord</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
+    <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
+  </ItemGroup>
+
+</Project>

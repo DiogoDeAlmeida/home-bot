@@ -1,0 +1,25 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Central Package Management : les versions vivent ici et nulle part ailleurs.
+         Les .csproj ne portent que <PackageReference Include="..." />, sans Version. -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Microsoft.Extensions — aligné sur .NET 10 (LTS, support jusqu'au 14/11/2028)">
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <!-- Ajoutés aux étapes suivantes, volontairement absents ici :
+       EF Core + SQLite, Discord.Net 3.20.1, Serilog, Polly, WireMock.Net.
+       L'étape 0 ne tire aucune dépendance qu'elle n'utilise pas. -->
+
+</Project>

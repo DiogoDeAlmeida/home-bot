@@ -1,0 +1,51 @@
+# ---- .NET ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.user
+*.suo
+*.userprefs
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.sln.docstates
+
+# ---- Node / front ----
+node_modules/
+web-ui/dist/
+web-ui/.vite/
+.npm/
+*.tsbuildinfo
+
+# ---- Sortie du front injectée dans le Host au build ----
+src/HomelabHub.Host/wwwroot/
+
+# ---- Données locales de développement ----
+# Jamais de base, de keyring Data Protection ou de configuration dans le dépôt.
+*.db
+*.db-shm
+*.db-wal
+data/
+keys/
+appsettings.Development.json
+appsettings.Local.json
+*.local.json
+
+# ---- Secrets ----
+# Ceinture et bretelles : rien de ce qui ressemble à un secret ne doit partir.
+.env
+.env.*
+*.pfx
+*.key
+*.pem
+secrets.json
+
+# ---- Divers ----
+*.log
+Thumbs.db
+.DS_Store

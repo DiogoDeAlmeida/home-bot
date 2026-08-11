@@ -1,0 +1,20 @@
+# Normalisation des fins de ligne.
+# Critique : les scripts d'installation tournent dans un LXC Debian. Un CRLF dans
+# un fichier .sh donne « bad interpreter: /bin/bash^M », erreur classique et
+# pénible à diagnostiquer depuis Windows.
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.service text eol=lf
+
+*.ps1   text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+*.sln   text eol=crlf
+
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.woff2 binary
+*.db    binary

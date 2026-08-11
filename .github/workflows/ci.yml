@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build et tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # La version du SDK vient de global.json : une seule source de vérité entre le poste
+      # de développement et la CI.
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restauration
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      # Inclut le test d'architecture (ADR-0010) : si un module gagne une référence vers le
+      # noyau, la CI casse. C'est le seul moyen de faire tenir une frontière dans le temps.
+      - name: Tests
+        run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
+
+# À venir :
+#   étape 1 — build du front web-ui/ (npm ci && npm run build) avant le build .NET
+#   étape 6 — release.yml : publication self-contained linux-x64 en asset de release

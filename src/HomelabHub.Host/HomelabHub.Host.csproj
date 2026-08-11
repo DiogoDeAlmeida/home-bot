@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>HomelabHub.Host</RootNamespace>
+    <AssemblyName>homelabhub</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Racine de composition : le seul projet exécutable, et le seul endroit qui connaisse
+       à la fois l'adaptateur Discord et l'API web. Le bot tourne comme service d'arrière-plan
+       dans ce processus : un binaire, une unité systemd, un packaging LXC simple. -->
+  <ItemGroup>
+    <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
+    <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
+    <ProjectReference Include="..\HomelabHub.Infrastructure\HomelabHub.Infrastructure.csproj" />
+    <ProjectReference Include="..\HomelabHub.Discord\HomelabHub.Discord.csproj" />
+    <ProjectReference Include="..\HomelabHub.Modules.System\HomelabHub.Modules.System.csproj" />
+    <ProjectReference Include="..\HomelabHub.Modules.Media\HomelabHub.Modules.Media.csproj" />
+  </ItemGroup>
+
+  <!-- Publication (étape 6) : pilotée par la ligne de commande et non par ce fichier, pour
+       que `dotnet build` reste rapide en développement. Les options exactes sont dans
+       .github/workflows/release.yml et documentées dans docs/03-deploiement.md.
+
+       Options retenues : self-contained, single-file, ReadyToRun, runtime linux-x64.
+       Options écartées : PublishTrimmed et PublishAot, parce qu'EF Core, Discord.Net et
+       Serilog reposent sur la réflexion et cassent au découpage (ADR-0001) ; le binaire
+       pèsera donc 90 à 130 Mo. EnableCompressionInSingleFile aussi, parce que le gain de
+       taille se paie par une extraction sur disque à chaque démarrage.
+
+       La sortie de web-ui/ sera injectée dans wwwroot/ par une cible MSBuild à l'étape 1. -->
+
+</Project>

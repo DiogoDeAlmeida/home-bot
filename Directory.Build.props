@@ -1,0 +1,43 @@
+<Project>
+
+  <PropertyGroup Label="Cible">
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Qualité">
+    <!-- Un avertissement non traité aujourd'hui est un bug dans six mois.
+         Sur un projet maintenu par une seule personne, le compilateur est le
+         seul relecteur disponible : autant lui donner de l'autorité. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591 : commentaire XML manquant. On documente les contrats publics,
+         pas chaque membre trivial. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Globalisation">
+    <!-- ADR-0001 : PAS d'InvariantGlobalization. L'interface est en français et
+         doit formater dates et nombres correctement. Conséquence directe :
+         libicu est une dépendance obligatoire du LXC, installée par le script. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Build reproductible">
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Identité">
+    <Product>Homelab Hub</Product>
+    <Authors>diogo</Authors>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <RepositoryUrl>https://github.com/diogo/homelab-hub</RepositoryUrl>
+  </PropertyGroup>
+
+</Project>
