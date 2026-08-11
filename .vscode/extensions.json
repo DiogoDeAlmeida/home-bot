@@ -1,8 +1,13 @@
 {
   "recommendations": [
+    // Fournit le type de débogage « coreclr » utilisé par launch.json. C'est celle-ci que
+    // VS Code réclame quand on lance la configuration Hub.
+    "ms-dotnettools.csharp",
+    // Se pose par-dessus : explorateur de solution, explorateur de tests. Installe csharp
+    // automatiquement comme dépendance.
     "ms-dotnettools.csdevkit",
+    // Tailwind 4 n'a plus de tailwind.config.js ; le pointeur vers le CSS est dans settings.json.
     "bradlc.vscode-tailwindcss",
-    "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode"
   ]
 }
