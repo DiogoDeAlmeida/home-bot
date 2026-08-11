@@ -1,4 +1,4 @@
-using HomelabHub.Abstractions.Configuration;
+using HomelabHub.Abstractions.Dashboard;
 using HomelabHub.Abstractions.Modules;
 using HomelabHub.Core.Configuration;
 using HomelabHub.Core.Modules;
@@ -44,6 +44,46 @@ internal static class ModuleEndpoints
             return Results.Ok(registry.GetActivation(key));
         });
 
+        // Les widgets des modules actifs, agrégés. Données pures : c'est chaque adaptateur qui
+        // décide du rendu, il n'y a pas de modèle de présentation partagé (ADR-0006).
+        app.MapGet("/api/widgets", async (ModuleCatalog catalog, IModuleRegistry registry,
+                                          IServiceProvider services, CancellationToken cancellationToken) =>
+        {
+            var payloads = new List<(int Order, object Widget)>();
+
+            foreach (var module in catalog.Descriptors.Where(m => registry.IsActive(m.Key)))
+            {
+                foreach (var type in module.WidgetTypes)
+                {
+                    var widget = (IWidgetProvider)services.GetRequiredService(type);
+                    var descriptor = widget.Descriptor;
+
+                    try
+                    {
+                        var payload = await widget.GetAsync(cancellationToken).ConfigureAwait(false);
+
+                        payloads.Add((descriptor.Order, new
+                        {
+                            moduleKey = module.Key,
+                            descriptor.Key,
+                            descriptor.Title,
+                            descriptor.ShowOnDiscordDashboard,
+                            descriptor.Order,
+                            payload.Data,
+                            payload.GeneratedAt,
+                        }));
+                    }
+                    catch (Exception) when (!cancellationToken.IsCancellationRequested)
+                    {
+                        // Convention §14 : un widget en panne laisse un trou dans le tableau de
+                        // bord, il ne fait pas tomber la page entière.
+                    }
+                }
+            }
+
+            return Results.Ok(payloads.OrderBy(p => p.Order).Select(p => p.Widget));
+        }).RequireAuthorization();
+
         modules.MapGet("/{key}/health", async (string key, ModuleCatalog catalog,
                                                IModuleRegistry registry, IServiceProvider services,
                                                CancellationToken cancellationToken) =>
@@ -75,35 +115,16 @@ internal static class ModuleEndpoints
             return Results.Ok(results.Length == 1 ? results[0] : Merge(results));
         });
 
-        // ── Configuration : schéma + valeurs, secrets masqués ───────────────────────────
+        // Configuration : même projection et même écriture que les réglages du hub, au préfixe
+        // près. Un seul générateur de formulaire côté React en découle (ADR-0013).
         modules.MapGet("/{key}/config", (string key, ModuleCatalog catalog, IHubConfigStore store) =>
         {
             var descriptor = catalog.Find(key);
-            if (descriptor is null)
-            {
-                return Results.NotFound();
-            }
 
-            return Results.Ok(new
-            {
-                key = descriptor.Key,
-                fields = descriptor.Module.ConfigSchema.Fields.Select(declared => new
-                {
-                    declared.Key,
-                    declared.Label,
-                    kind = declared.Kind.ToString(),
-                    declared.Required,
-                    declared.Secret,
-                    declared.Help,
-                    declared.DefaultValue,
-                    declared.Options,
-                    // Présent dans le contrat, non résolu en v1 : le front rend une saisie
-                    // libre tant que personne n'en a réellement besoin (ADR-0011).
-                    declared.OptionsFrom,
-                    declared.DependsOn,
-                    value = ReadForDisplay(store, descriptor.Key, declared),
-                }),
-            });
+            return descriptor is null
+                ? Results.NotFound()
+                : Results.Ok(ConfigSurface.Describe(descriptor.Key,
+                                                    descriptor.Module.ConfigSchema.Fields, store));
         });
 
         modules.MapPut("/{key}/config", async (string key, Dictionary<string, string?> values,
@@ -111,62 +132,12 @@ internal static class ModuleEndpoints
                                                CancellationToken cancellationToken) =>
         {
             var descriptor = catalog.Find(key);
-            if (descriptor is null)
-            {
-                return Results.NotFound();
-            }
 
-            var schema = descriptor.Module.ConfigSchema.Fields
-                .ToDictionary(declared => declared.Key, StringComparer.OrdinalIgnoreCase);
-
-            var writes = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
-            var rejected = new List<string>();
-
-            foreach (var (field, value) in values)
-            {
-                if (!schema.TryGetValue(field, out var declared))
-                {
-                    // Une clé hors schéma est refusée : le formulaire est généré depuis le
-                    // schéma, donc une clé inconnue est soit une faute de frappe, soit un abus.
-                    rejected.Add(field);
-                    continue;
-                }
-
-                // Un secret réaffiché masqué et renvoyé tel quel ne doit pas écraser la vraie
-                // valeur : c'est le piège classique du formulaire en écriture seule.
-                if (declared.Secret && value is not null && value.All(c => c == '•'))
-                {
-                    continue;
-                }
-
-                writes[$"{descriptor.Key}.{declared.Key}"] = new ConfigValue(value, declared.Secret);
-            }
-
-            if (rejected.Count > 0)
-            {
-                return Results.BadRequest(new { error = "unknown_fields", fields = rejected });
-            }
-
-            await store.SetManyAsync(writes, cancellationToken).ConfigureAwait(false);
-            return Results.NoContent();
+            return descriptor is null
+                ? Results.NotFound()
+                : await ConfigSurface.WriteAsync(descriptor.Key, descriptor.Module.ConfigSchema.Fields,
+                                                 values, store, cancellationToken).ConfigureAwait(false);
         });
-    }
-
-    /// <summary>
-    /// Un secret ne repart jamais en clair de l'API : écriture seule, lecture masquée.
-    /// </summary>
-    private static string? ReadForDisplay(IHubConfigStore store, string moduleKey, ConfigField declared)
-    {
-        var value = store.GetValue($"{moduleKey}.{declared.Key}");
-
-        if (!declared.Secret || string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        return value.Length <= 4
-            ? new string('•', 8)
-            : new string('•', 6) + value[^4..];
     }
 
     private static ModuleHealth Merge(IReadOnlyList<ModuleHealth> results) => new(

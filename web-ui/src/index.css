@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+/* Tailwind 4 : la configuration est en CSS, il n'y a plus de tailwind.config.js. */
+
+@theme {
+  --color-surface: oklch(100% 0 0);
+  --color-surface-muted: oklch(97% 0.003 260);
+  --color-border-subtle: oklch(91% 0.005 260);
+  --color-ink: oklch(24% 0.01 260);
+  --color-ink-muted: oklch(52% 0.012 260);
+  --color-accent: oklch(55% 0.15 250);
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-surface: oklch(21% 0.01 260);
+    --color-surface-muted: oklch(25% 0.012 260);
+    --color-border-subtle: oklch(32% 0.014 260);
+    --color-ink: oklch(94% 0.005 260);
+    --color-ink-muted: oklch(70% 0.012 260);
+    --color-accent: oklch(70% 0.13 250);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-surface-muted);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+}

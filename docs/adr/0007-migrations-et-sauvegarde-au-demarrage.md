@@ -46,6 +46,24 @@ C'est le piège classique de Data Protection sur Linux. Produire une archive uni
 l'erreur structurellement impossible, plutôt que de compter sur la vigilance au moment où on
 restaure — c'est-à-dire au pire moment.
 
+## La base n'existe pas encore, et c'est délibéré
+
+À l'étape 1, la configuration est un dictionnaire clé/valeur sans aucune relation. Elle vit dans
+un fichier JSON, secrets chiffrés, écrit de façon atomique. **SQLite et EF Core n'ont pas été
+introduits**, et ce report est un choix, pas un oubli.
+
+Ils arriveront avec ce qui en a réellement besoin : les anomalies persistantes et leur cycle de
+vie, l'historique du journal et sa rétention à 14 jours ou 100 000 lignes, les identifiants des
+messages Discord à retrouver après redémarrage. Ces objets ont des relations, des index et une
+purge — un dictionnaire ne les porte pas.
+
+Rien n'est à rattraper le jour venu : la sauvegarde archive les **répertoires entiers** de
+données et de configuration, sans liste de fichiers à tenir à jour. Le fichier `.db` sera couvert
+sans qu'une ligne de `BackupService` change. Ce qu'on n'a pas à maintenir ne peut pas devenir faux.
+
+La séquence « sauvegarde puis migration puis refus de démarrer en cas d'échec » décrite plus haut
+reste la cible ; elle sera câblée en même temps que la base.
+
 ## Conséquences
 
 - Le script de mise à jour vérifie `/healthz` après redémarrage avant de déclarer la mise à

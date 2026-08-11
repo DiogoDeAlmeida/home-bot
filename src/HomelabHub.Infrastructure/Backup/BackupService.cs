@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.IO.Compression;
-using HomelabHub.Abstractions.Platform;
+using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -89,7 +89,30 @@ internal sealed class BackupService(
             .Select(path => new FileInfo(path))
             .OrderByDescending(info => info.CreationTimeUtc)
             .Select(info => new BackupArchive(info.Name, info.Length,
-                                              new DateTimeOffset(info.CreationTimeUtc, TimeSpan.Zero), 0))];
+                                              new DateTimeOffset(info.CreationTimeUtc, TimeSpan.Zero),
+                                              CountEntries(info.FullName)))];
+    }
+
+    /// <summary>
+    /// Lit le nombre d'entrées d'une archive existante.
+    /// </summary>
+    /// <remarks>
+    /// Seul le répertoire central du ZIP est parcouru, pas les données : c'est bon marché, et
+    /// nettement préférable à afficher « 0 fichiers » pour toute archive listée — un compte nul
+    /// est précisément le symptôme d'une sauvegarde qui n'a rien sauvegardé.
+    /// </remarks>
+    private int CountEntries(string path)
+    {
+        try
+        {
+            using var archive = ZipFile.OpenRead(path);
+            return archive.Entries.Count;
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException)
+        {
+            logger.LogWarning(ex, "Archive {File} illisible.", Path.GetFileName(path));
+            return 0;
+        }
     }
 
     private static int AddDirectory(ZipArchive archive, string source, string prefix, string? excluded)
@@ -126,9 +149,9 @@ internal sealed class BackupService(
 
     private void ApplyRetention()
     {
-        // La rétention est un réglage du hub, pas d'un module : sa clé n'est donc préfixée par
-        // aucun module. appsettings.json fournit la valeur d'amorçage, l'interface la surcharge.
-        var keep = Math.Max(1, config.GetInt32("hub.backup.retention", options.BackupRetention));
+        // Réglage du hub, pas d'un module : la clé vit sous le préfixe réservé « hub. »
+        // (ADR-0013). appsettings.json fournit la valeur d'amorçage, l'interface la surcharge.
+        var keep = Math.Max(1, config.GetInt32(HubSettings.BackupRetentionKey, options.BackupRetention));
 
         var stale = Directory
             .EnumerateFiles(platform.BackupsDirectory, $"{FilePrefix}*{FileExtension}")

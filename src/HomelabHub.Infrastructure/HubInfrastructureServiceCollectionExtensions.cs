@@ -1,4 +1,5 @@
 using HomelabHub.Abstractions.Platform;
+using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
 using HomelabHub.Infrastructure.Backup;
 using HomelabHub.Infrastructure.Configuration;
@@ -33,6 +34,9 @@ public static class HubInfrastructureServiceCollectionExtensions
                 .SetApplicationName("HomelabHub");
 
         services.AddSingleton<IHubConfigStore, JsonHubConfigStore>();
+
+        // IHubBackupService reste une dépendance du noyau et du Host : aucun module ne peut le
+        // résoudre, puisqu'aucun module ne référence Core (ADR-0014).
         services.AddSingleton<IHubBackupService, BackupService>();
 
         return services;

@@ -10,7 +10,6 @@ namespace HomelabHub.Modules.SystemInfo;
 /// <summary>Observe le hub et projette le résultat dans le snapshot.</summary>
 internal sealed class SystemPoller(
     IHubPlatform platform,
-    IHubBackupService backups,
     IModuleState<SystemSnapshot> state,
     IModuleConfiguration<SystemModule> config,
     IEventPublisher events) : IModulePoller
@@ -18,8 +17,6 @@ internal sealed class SystemPoller(
     public async Task PollAsync(CancellationToken cancellationToken)
     {
         var volumes = ReadVolumes();
-        var archives = backups.List();
-        var lastBackup = archives.Count > 0 ? archives[0] : null;
         var now = DateTimeOffset.UtcNow;
 
         state.Mutate(_ => new SystemSnapshot(
@@ -27,7 +24,6 @@ internal sealed class SystemPoller(
             platform.StartedAt,
             now - platform.StartedAt,
             volumes,
-            lastBackup,
             now));
 
         await PublishDiskAnomaliesAsync(volumes, now, cancellationToken).ConfigureAwait(false);

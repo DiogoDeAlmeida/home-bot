@@ -2,11 +2,14 @@ using System.Text.RegularExpressions;
 using HomelabHub.Abstractions.Configuration;
 using HomelabHub.Abstractions.Events;
 using HomelabHub.Abstractions.Modules;
+using HomelabHub.Abstractions.Platform;
 using HomelabHub.Core.Capabilities;
+using HomelabHub.Core.Configuration;
 using HomelabHub.Core.Events;
 using HomelabHub.Core.Ingestion;
 using HomelabHub.Core.Modules;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace HomelabHub.Core;
@@ -39,6 +42,14 @@ public static partial class HubCoreServiceCollectionExtensions
                 continue;
             }
 
+            // « hub » est réservé aux réglages du noyau (ADR-0013). Un module qui le
+            // revendiquerait écraserait la rétention des sauvegardes ou le niveau de log.
+            if (string.Equals(module.Key, HubSettings.Prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"Clé de module « {module.Key} » réservée aux réglages du noyau.");
+                continue;
+            }
+
             if (descriptors.Exists(d => string.Equals(d.Key, module.Key, StringComparison.OrdinalIgnoreCase)))
             {
                 errors.Add($"Clé de module « {module.Key} » déclarée plusieurs fois.");
@@ -58,6 +69,16 @@ public static partial class HubCoreServiceCollectionExtensions
         services.AddSingleton(new ModuleCatalog(descriptors));
         services.AddSingleton<IModuleRegistry, ModuleRegistry>();
         services.AddSingleton(typeof(IModuleConfiguration<>), typeof(Configuration.ModuleConfiguration<>));
+
+        // Un module demande une sauvegarde ; il ne la pilote pas (ADR-0014).
+        services.AddSingleton(typeof(IBackupRequester<>), typeof(Backup.BackupRequester<>));
+        services.AddSingleton<Backup.BackupThrottle>();
+        services.TryAddSingleton(TimeProvider.System);
+
+        // LogLevelSwitch n'est délibérément PAS enregistré ici : le Host doit l'instancier
+        // avant Build() pour le brancher sur le filtre de journalisation, et l'enregistrer
+        // lui-même. En ajouter un second ici produirait une instance résolue par le conteneur
+        // que personne n'écoute — le réglage serait accepté et sans effet.
 
         // Le registre valide toutes les capacités dans son constructeur et lève si l'une d'elles
         // est mal déclarée. Il est résolu au démarrage (cf. ValidateHubDeclarations) pour que

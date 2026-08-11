@@ -90,6 +90,22 @@ public sealed class BackupServiceTests
         Assert.True(archive.SizeBytes > 0);
     }
 
+    [Fact]
+    public async Task Le_nombre_de_fichiers_est_aussi_exact_a_la_relecture()
+    {
+        // La création connaît le compte ; l'énumération doit le retrouver, sans quoi l'interface
+        // afficherait « 0 fichiers » pour toute archive existante.
+        using var hub = new TemporaryHub();
+        hub.WriteKeyring();
+        hub.WriteDatabase();
+
+        var created = await hub.Backups.CreateAsync("test", TestContext.Current.CancellationToken);
+        var listed = hub.Backups.List()[0];
+
+        Assert.Equal(created.EntryCount, listed.EntryCount);
+        Assert.NotEqual(0, listed.EntryCount);
+    }
+
     private static List<string> ReadEntries(TemporaryHub hub, string fileName)
     {
         using var zip = ZipFile.OpenRead(Path.Combine(hub.Platform.BackupsDirectory, fileName));

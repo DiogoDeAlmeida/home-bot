@@ -1,3 +1,5 @@
+using HomelabHub.Abstractions.Configuration;
+
 namespace HomelabHub.Abstractions.Platform;
 
 /// <summary>
@@ -6,8 +8,7 @@ namespace HomelabHub.Abstractions.Platform;
 /// </summary>
 /// <remarks>
 /// Ils vivent dans <c>Abstractions</c> parce qu'un module doit pouvoir s'en servir sans
-/// référencer le noyau (ADR-0010). Le module <c>system</c> en est le premier client : ses
-/// capacités portent justement sur le hub lui-même.
+/// référencer le noyau (ADR-0010).
 /// </remarks>
 public interface IHubPlatform
 {
@@ -24,31 +25,42 @@ public interface IHubPlatform
     string ConfigDirectory { get; }
 }
 
-/// <summary>Sauvegarde intégrée du hub.</summary>
+/// <summary>
+/// Permet à un module de <b>demander</b> une sauvegarde. Rien de plus.
+/// </summary>
 /// <remarks>
-/// <b>L'archive est unique et contient la base, le keyring Data Protection et la
-/// configuration</b> (ADR-0007). Ce n'est pas un détail d'implémentation : sur Linux le keyring
-/// est un dossier de fichiers en clair, et une base restaurée sans lui rend tous les secrets
-/// définitivement illisibles. Produire une archive unique rend l'erreur impossible plutôt que
-/// de compter sur la vigilance au moment de la restauration, c'est-à-dire au pire moment.
+/// <para>
+/// La sauvegarde elle-même — création, restauration, accès aux archives — reste interne au
+/// noyau (ADR-0014). L'archive contient le keyring, donc de quoi déchiffrer toutes les clés
+/// d'API du homelab : en interdire le déclenchement depuis Discord tout en le rendant
+/// résoluble par n'importe quel module rouvrirait l'accès par une autre porte.
+/// </para>
+/// <para>
+/// Ce contrat n'exprime donc qu'une <i>intention</i>. Le noyau décide s'il l'honore, applique
+/// un anti-rebond, et journalise l'appelant et le motif. Le paramètre de type suit la même
+/// convention que <see cref="IModuleConfiguration{TModule}"/> : il donne au noyau l'identité de
+/// l'appelant sans que le module ait à la déclarer.
+/// </para>
 /// </remarks>
-public interface IHubBackupService
+public interface IBackupRequester<TModule> where TModule : IHubModuleMarker
 {
-    /// <summary>Crée une archive et applique la rétention configurée.</summary>
-    /// <param name="reason">Motif journalisé : « manuelle », « avant migration », « avant mise à jour ».</param>
+    /// <param name="reason">Motif journalisé, en français, destiné à l'exploitant.</param>
     /// <param name="cancellationToken">Jeton d'annulation.</param>
-    Task<BackupArchive> CreateAsync(string reason, CancellationToken cancellationToken);
-
-    /// <summary>Archives présentes, les plus récentes d'abord.</summary>
-    IReadOnlyList<BackupArchive> List();
+    Task<BackupRequestResult> RequestBackupAsync(string reason, CancellationToken cancellationToken);
 }
 
-/// <param name="FileName">Nom du fichier, sans chemin — le chemin absolu ne sort jamais de l'API.</param>
-/// <param name="SizeBytes">Taille de l'archive.</param>
-/// <param name="CreatedAt">Date de création.</param>
-/// <param name="EntryCount">Nombre d'entrées archivées, utile pour repérer une archive vide.</param>
-public sealed record BackupArchive(
-    string FileName,
-    long SizeBytes,
-    DateTimeOffset CreatedAt,
-    int EntryCount);
+/// <param name="Outcome">Décision du noyau.</param>
+/// <param name="Message">Explication destinée à l'utilisateur, en français.</param>
+public sealed record BackupRequestResult(BackupRequestOutcome Outcome, string Message);
+
+public enum BackupRequestOutcome
+{
+    /// <summary>Une archive a été produite.</summary>
+    Created = 0,
+
+    /// <summary>Refusée : une sauvegarde trop récente existe déjà (anti-rebond).</summary>
+    Throttled = 1,
+
+    /// <summary>La sauvegarde a échoué. Le détail est dans le journal, pas dans le message.</summary>
+    Failed = 2,
+}

@@ -20,3 +20,5 @@ Une décision ne se modifie pas : elle se remplace par une nouvelle qui la super
 | [0010](0010-frontieres-de-projets.md) | Frontières de projets, garanties par un test | Acceptée |
 | [0011](0011-options-dynamiques-differees.md) | `OptionsFrom` dans le contrat, résolution différée | Acceptée |
 | [0012](0012-authentification-des-webhooks.md) | Jeton de webhook en en-tête, URL en repli | Acceptée |
+| [0013](0013-schema-partage-modules-et-hub.md) | Le hub décrit ses réglages avec la primitive des modules | Acceptée |
+| [0014](0014-demander-une-sauvegarde-nest-pas-la-piloter.md) | Demander une sauvegarde n'est pas la piloter | Acceptée |

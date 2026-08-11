@@ -17,6 +17,25 @@
     <ProjectReference Include="..\HomelabHub.Modules.Media\HomelabHub.Modules.Media.csproj" />
   </ItemGroup>
 
+  <!-- Build du front, injecté dans wwwroot par Vite (cf. web-ui/vite.config.ts).
+
+       Conditionné à Release : `dotnet build` en développement reste rapide, et le front se
+       lance à part avec `npm run dev`, qui proxifie /api vers ce Host. En Release, wwwroot est
+       peuplé avant que le SDK ne calcule les fichiers à publier, ce qui suffit pour que
+       `dotnet publish` embarque l'interface.
+
+       `-p:SkipWebUi=true` court-circuite l'étape quand Node n'est pas disponible. -->
+  <PropertyGroup>
+    <WebUiDirectory>$(MSBuildProjectDirectory)/../../web-ui/</WebUiDirectory>
+  </PropertyGroup>
+
+  <Target Name="BuildWebUi" BeforeTargets="BeforeBuild"
+          Condition="'$(Configuration)' == 'Release' AND '$(SkipWebUi)' != 'true' AND Exists('$(WebUiDirectory)package.json')">
+    <Exec Command="npm ci" WorkingDirectory="$(WebUiDirectory)"
+          Condition="!Exists('$(WebUiDirectory)node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(WebUiDirectory)" />
+  </Target>
+
   <!-- Publication (étape 6) : pilotée par la ligne de commande et non par ce fichier, pour
        que `dotnet build` reste rapide en développement. Les options exactes sont dans
        .github/workflows/release.yml et documentées dans docs/03-deploiement.md.

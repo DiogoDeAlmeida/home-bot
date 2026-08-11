@@ -1,5 +1,6 @@
 using System.Reflection;
 using HomelabHub.Core;
+using HomelabHub.Core.Configuration;
 using HomelabHub.Host.Api;
 using HomelabHub.Host.Auth;
 using HomelabHub.Infrastructure;
@@ -14,6 +15,17 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 // ─────────────────────────────────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Niveau de journalisation modifiable depuis l'interface, sans redémarrage ni SSH. Le délégué
+// est évalué à chaque appel de log : changer la propriété suffit à changer le comportement.
+//
+// SetMinimumLevel(Trace) ouvre la porte au maximum et laisse ce délégué décider seul. Sans
+// cela, une règle issue d'appsettings l'emporterait en silence : le réglage de l'interface
+// serait accepté et sans effet, ce qui est le pire des deux mondes.
+var logLevel = new LogLevelSwitch();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+builder.Logging.AddFilter(logLevel.IsEnabled);
+builder.Services.AddSingleton(logLevel);
 
 builder.Services.AddHubInfrastructure(builder.Configuration);
 
@@ -57,6 +69,14 @@ var app = builder.Build();
 // voir au lancement.
 app.Services.ValidateHubDeclarations();
 
+// Le niveau stocké prend effet avant même le premier journal applicatif.
+logLevel.ApplyFrom(app.Services.GetRequiredService<IHubConfigStore>());
+
+// L'interface React, buildée dans wwwroot par Vite, est servie en statique par ce même
+// processus : une seule origine, donc aucun CORS et aucun proxy inverse à configurer.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseMiddleware<SetupGateMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -70,8 +90,17 @@ var version = Assembly.GetExecutingAssembly()
 app.MapGet("/healthz", () => Results.Ok(new { status = "ok", version })).AllowAnonymous();
 
 app.MapSetupAndAuth();
+app.MapHub();
 app.MapModules();
 app.MapCapabilities();
+
+// Une route d'API inexistante doit répondre 404 en JSON, pas renvoyer la page React : sinon un
+// appel mal orthographié réussit avec du HTML et le bug se cherche longtemps.
+app.Map("/api/{**rest}", () => Results.NotFound(new { error = "unknown_endpoint" }))
+   .AllowAnonymous();
+
+// Toute autre URL rend l'interface : le routage des pages se fait côté client.
+app.MapFallbackToFile("index.html").AllowAnonymous();
 
 await app.RunAsync();
 

@@ -64,7 +64,7 @@ dépendances. Aucune dépendance injectée, aucun état, aucun appel réseau dan
 | `IModuleConfiguration<TModule>` | Config du module, clés relatives, valeurs par défaut du schéma |
 | `IEventPublisher` | Publication d'événements et d'anomalies |
 | `IHubPlatform` | Version, démarrage, répertoires |
-| `IHubBackupService` | Sauvegarde intégrée |
+| `IBackupRequester<TModule>` | **Demander** une sauvegarde. Le noyau décide, applique l'anti-rebond et journalise l'appelant ([ADR-0014](adr/0014-demander-une-sauvegarde-nest-pas-la-piloter.md)) |
 | Le client typé déclaré par `AddServiceClient` | Délai d'attente, URL et authentification depuis la config |
 
 Et ce dont tu n'as **pas** à t'occuper : activation, cadence des pollers, route et jeton de

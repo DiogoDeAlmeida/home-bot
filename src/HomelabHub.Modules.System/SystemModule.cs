@@ -50,7 +50,6 @@ public sealed class SystemModule : IHubModule
                .AddCapability<StatusCapability>()
                .AddCapability<DiskCapability>()
                .AddCapability<CreateBackupCapability>()
-               .AddCapability<ListBackupsCapability>()
                .AddWidget<SystemOverviewWidget>();
     }
 }

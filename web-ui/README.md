@@ -1,30 +1,43 @@
 # web-ui
 
-Interface web du hub. **Non initialisée — étape 1.**
+Interface web du hub. Vite + React + TypeScript + React Router + TanStack Query + Tailwind 4.
 
-## Stack retenue
+```bash
+npm install
+npm run dev        # http://localhost:5173, proxifie /api vers le Host sur :8080
+npm run build      # sortie dans ../src/HomelabHub.Host/wwwroot
+```
 
-Vite + React + TypeScript + React Router + TanStack Query + Tailwind + shadcn/ui.
+## La pièce centrale
 
-TanStack Query gère le cache et l'invalidation ; SignalR pousse les invalidations plutôt que
-les données elles-mêmes, ce qui évite de dupliquer la logique de fraîcheur.
+[`src/components/SchemaForm.tsx`](src/components/SchemaForm.tsx) génère un formulaire à partir
+d'un schéma servi par le serveur. **Ajouter un module ne demande aucune ligne de TypeScript.**
 
-## Pièce centrale
+Le même composant sert la configuration d'un module et les réglages du hub : le noyau décrit ses
+réglages avec la primitive des modules, sous le préfixe réservé `hub.`
+([ADR-0013](../docs/adr/0013-schema-partage-modules-et-hub.md)).
 
-Le **générateur de formulaire à partir de `ModuleConfigSchema`**. C'est lui qui rend le
-système réellement extensible : ajouter un module ne doit demander aucune ligne de TypeScript.
+Deux règles gouvernent la soumission :
 
-Il consomme les champs décrits côté serveur (`ConfigField`) et rend le composant
-correspondant. Le champ `OptionsFrom` — options résolues à l'exécution — est présent dans le
-contrat mais **délibérément non résolu en v1**
-([ADR-0011](../docs/adr/0011-options-dynamiques-differees.md)) : le front affiche une saisie
-libre, et la résolution dynamique viendra quand un module en aura réellement besoin.
+- **seuls les champs modifiés partent** — un secret arrive masqué (`••••••1234`) ; le réémettre
+  écraserait la vraie valeur par des points de suspension ;
+- **un champ vidé part explicitement à `null`**, ce qui supprime la clé côté serveur.
 
-## Prérequis
+`OptionsFrom` — options résolues à l'exécution — est présent dans le contrat mais **pas encore
+résolu** ([ADR-0011](../docs/adr/0011-options-dynamiques-differees.md)) : le formulaire rend une
+saisie libre et le dit explicitement plutôt que d'afficher un champ texte inexpliqué là où on
+attend une liste.
 
-Node **20.19+** ou **22.12+** — Vite 7 ne prend plus en charge Node 20.11.
+## Composants d'interface
 
-## Build
+`src/components/ui/primitives.tsx` suit les conventions shadcn/ui — mêmes noms, même `cn()`,
+mêmes variantes via `class-variance-authority` — mais les composants sont écrits à la main. Pour
+cinq écrans d'administration, le CLI shadcn entraînerait une douzaine de dépendances Radix pour
+des boutons et des champs de saisie. La structure reste compatible : le jour où un vrai menu
+déroulant accessible sera nécessaire, on dépose le composant shadcn correspondant à côté.
 
-La sortie sera injectée dans `src/HomelabHub.Host/wwwroot/` par une cible MSBuild, pour que
-`dotnet publish` produise un binaire unique servant l'interface en statique.
+## Intégration au build .NET
+
+`dotnet publish -c Release` déclenche `npm run build` via une cible MSBuild du projet Host, et
+embarque `wwwroot` dans la publication. `-p:SkipWebUi=true` court-circuite l'étape quand Node
+n'est pas disponible. En Debug, la cible ne s'exécute pas : le front se lance à part.
