@@ -127,10 +127,48 @@ export interface VolumeUsage {
   usedBytes: number
 }
 
+export type JourneyState = 0 | 1 | 2 | 3 | 4 | 5
+
+export interface JourneySummary {
+  key: string
+  title: string | null
+  mediaType: 0 | 1
+  state: JourneyState
+  needsAttention: boolean
+  progress: number
+  downloadSpeed: number
+  bytesRemaining: number
+  /** TimeSpan .NET sérialisé, ou null quand qBittorrent ne sait pas. */
+  estimatedTimeLeft: string | null
+  downloadCount: number
+  episodeCount: number
+  requestedAt: string | null
+}
+
+/**
+ * Déjà trié et borné par le module : le palmarès et le résumé sont décidés côté serveur, pas
+ * ici. C'est ce qui garantit que cette page et le message d'un salon montrent la même chose.
+ */
+export interface MediaOverview {
+  top: JourneySummary[]
+  totalJourneys: number
+  downloading: number
+  importing: number
+  needsAttention: number
+  downloadSpeed: number
+  bytesRemaining: number
+  bytesTotal: number
+  observedAt: string | null
+  unavailableSources: string[]
+}
+
 export interface SystemSnapshot {
   version: string
   startedAt: string
   uptime: string
   volumes: VolumeUsage[]
   observedAt: string | null
+  /** Seuils configurés, portés par le snapshot pour que l'affichage suive le réglage réel. */
+  warnBelowPercent: number
+  criticalBelowPercent: number
 }

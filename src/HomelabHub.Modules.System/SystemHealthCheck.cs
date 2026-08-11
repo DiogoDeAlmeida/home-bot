@@ -25,12 +25,18 @@ internal sealed class SystemHealthCheck(
                 HealthState.Unknown, "Aucune observation depuis le démarrage.", [], now));
         }
 
-        var threshold = config.GetInt32(SystemModule.FreeSpaceThresholdKey, 10);
+        var warn = config.GetInt32(SystemModule.WarnBelowPercentKey, 15);
+        var critical = config.GetInt32(SystemModule.CriticalBelowPercentKey, 7);
 
         var services = snapshot.Volumes
             .Select(volume => new ServiceHealth(
                 volume.Label,
-                volume.FreePercent < threshold ? HealthState.Degraded : HealthState.Healthy,
+                volume.FreePercent switch
+                {
+                    var p when p < critical => HealthState.Unhealthy,
+                    var p when p < warn => HealthState.Degraded,
+                    _ => HealthState.Healthy,
+                },
                 $"{SystemPoller.FormatBytes(volume.FreeBytes)} libres sur " +
                 $"{SystemPoller.FormatBytes(volume.TotalBytes)}."))
             .ToArray();
@@ -42,7 +48,8 @@ internal sealed class SystemHealthCheck(
         var message = worst switch
         {
             HealthState.Healthy => "Espace disque suffisant.",
-            HealthState.Degraded => "Au moins un volume passe sous le seuil configuré.",
+            HealthState.Degraded => $"Au moins un volume passe sous {warn} % d'espace libre.",
+            HealthState.Unhealthy => $"Au moins un volume passe sous {critical} % d'espace libre.",
             _ => "Aucun volume lisible.",
         };
 

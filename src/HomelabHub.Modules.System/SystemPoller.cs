@@ -24,7 +24,9 @@ internal sealed class SystemPoller(
             platform.StartedAt,
             now - platform.StartedAt,
             volumes,
-            now));
+            now,
+            config.GetInt32(SystemModule.WarnBelowPercentKey, 15),
+            config.GetInt32(SystemModule.CriticalBelowPercentKey, 7)));
 
         await PublishDiskAnomaliesAsync(volumes, now, cancellationToken).ConfigureAwait(false);
     }
@@ -42,14 +44,18 @@ internal sealed class SystemPoller(
                                                  DateTimeOffset now,
                                                  CancellationToken cancellationToken)
     {
-        var threshold = config.GetInt32(SystemModule.FreeSpaceThresholdKey, 10);
+        var warn = config.GetInt32(SystemModule.WarnBelowPercentKey, 15);
+        var critical = config.GetInt32(SystemModule.CriticalBelowPercentKey, 7);
 
-        foreach (var volume in volumes.Where(v => v.TotalBytes > 0 && v.FreePercent < threshold))
+        foreach (var volume in volumes.Where(v => v.TotalBytes > 0 && v.FreePercent < warn))
         {
             await events.PublishAsync(new HubEvent(
                 ModuleKey: "system",
                 Type: "system.disk.low",
-                Severity: volume.FreePercent < threshold / 2d
+                // Deux seuils indépendants plutôt qu'un seuil et sa moitié : la gravité d'un
+                // disque plein ne se déduit pas d'une règle de trois, elle dépend de la vitesse
+                // à laquelle il se remplit — donc de l'usage, donc du réglage.
+                Severity: volume.FreePercent < critical
                     ? HubEventSeverity.Critical
                     : HubEventSeverity.Warning,
                 Title: $"Espace disque faible sur {volume.Label}",

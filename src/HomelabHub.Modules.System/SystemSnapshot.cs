@@ -13,12 +13,20 @@ namespace HomelabHub.Modules.SystemInfo;
 /// <param name="Uptime">Durée de fonctionnement au moment de l'observation.</param>
 /// <param name="Volumes">Occupation des volumes portant les données et la configuration.</param>
 /// <param name="ObservedAt">Instant du dernier cycle. <c>null</c> tant qu'aucun n'a eu lieu.</param>
+/// <param name="WarnBelowPercent">
+/// Seuil d'avertissement configuré. Porté par le snapshot pour que les interfaces colorent
+/// selon le réglage réel plutôt que selon une constante recopiée — sinon un volume à 12 %
+/// déclenche une anomalie tout en s'affichant en vert.
+/// </param>
+/// <param name="CriticalBelowPercent">Seuil critique configuré.</param>
 public sealed record SystemSnapshot(
     string Version,
     DateTimeOffset StartedAt,
     TimeSpan Uptime,
     IReadOnlyList<VolumeUsage> Volumes,
-    DateTimeOffset? ObservedAt)
+    DateTimeOffset? ObservedAt,
+    int WarnBelowPercent = 15,
+    int CriticalBelowPercent = 7)
 {
     /// <summary>
     /// État initial, affichable avant le premier cycle : le dashboard peut le lire dès la

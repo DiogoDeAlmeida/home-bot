@@ -20,8 +20,10 @@ namespace HomelabHub.Modules.Media;
 public sealed class MediaModule : IHubModule
 {
     public const string PollIntervalKey = "pollIntervalSeconds";
-    public const string StalledGraceKey = "stalledGracePeriod";
     public const string HistoryPageSizeKey = "historyPageSize";
+    public const string StalledAfterKey = "detect.stalledAfter";
+    public const string GraceAfterAddedKey = "detect.graceAfterAdded";
+    public const string UnreachableCyclesKey = "detect.unreachableCycles";
 
     public string Key => "media";
 
@@ -45,11 +47,17 @@ public sealed class MediaModule : IHubModule
         .AddSecret("qbittorrent.password", "Mot de passe qBittorrent")
         .AddDuration(PollIntervalKey, "Intervalle d'interrogation", TimeSpan.FromSeconds(60),
                      help: "Les webhooks donnent la réactivité ; ce cycle donne la vérité.")
-        .AddDuration(StalledGraceKey, "Délai avant de signaler un blocage", TimeSpan.FromMinutes(30),
-                     help: "Un torrent tout juste récupéré se déclare « stalled » avant d'avoir trouvé "
-                           + "un pair : sans ce délai, chaque téléchargement lèverait une alerte.")
         .AddInt(HistoryPageSizeKey, "Événements d'historique lus par cycle", defaultValue: 100,
-                help: "Sert à déterminer si un téléchargement disparu de la file a été importé ou a échoué.");
+                help: "Sert à déterminer si un téléchargement disparu de la file a été importé ou a échoué. "
+                      + "Un pack de saison produit à lui seul 44 événements.")
+        .AddDuration(StalledAfterKey, "Blocage signalé après une inactivité de",
+                     TimeSpan.FromMinutes(30),
+                     help: "Mesuré sur la dernière activité rapportée par qBittorrent, pas entre deux cycles.")
+        .AddDuration(GraceAfterAddedKey, "Délai de grâce après ajout", TimeSpan.FromMinutes(10),
+                     help: "Un torrent tout juste récupéré se déclare « stalled » avant d'avoir trouvé un "
+                           + "pair. Sans ce délai, chaque téléchargement lèverait une alerte.")
+        .AddInt(UnreachableCyclesKey, "Cycles avant de signaler un service injoignable", defaultValue: 2,
+                help: "Absorbe le redémarrage d'un LXC sans déclencher d'alerte.");
 
     public void Register(IModuleRegistrationContext context)
     {

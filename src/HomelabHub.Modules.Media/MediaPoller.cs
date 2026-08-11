@@ -1,9 +1,11 @@
 using HomelabHub.Abstractions.Configuration;
+using HomelabHub.Abstractions.Events;
 using HomelabHub.Abstractions.Ingest;
 using HomelabHub.Abstractions.Modules;
 using HomelabHub.Modules.Media.Clients;
 using HomelabHub.Modules.Media.Contracts;
 using HomelabHub.Modules.Media.Correlation;
+using HomelabHub.Modules.Media.Detection;
 
 namespace HomelabHub.Modules.Media;
 
@@ -28,8 +30,21 @@ internal sealed class MediaPoller(
     ISeerrClient seerr,
     IQBittorrentClient qbittorrent,
     IModuleState<MediaSnapshot> state,
-    IModuleConfiguration<MediaModule> config) : IModulePoller
+    IModuleConfiguration<MediaModule> config,
+    IEventPublisher events) : IModulePoller
 {
+    /// <summary>
+    /// Cycles consécutifs pendant lesquels chaque service est resté muet.
+    /// </summary>
+    /// <remarks>
+    /// <b>Seul état conservé entre deux cycles, et il est assumé.</b> Il ne décrit pas un média
+    /// mais la liaison réseau, il vit en mémoire, il n'est jamais persisté, et le perdre au
+    /// redémarrage ne coûte que deux cycles d'attente supplémentaires. ADR-0015 porte sur l'état
+    /// dérivé des médias, pas sur un compteur de tentatives : rien ici ne peut diverger de ce
+    /// que les services savent redire.
+    /// </remarks>
+    private readonly Dictionary<string, int> _consecutiveFailures = new(StringComparer.Ordinal);
+
     public async Task PollAsync(CancellationToken cancellationToken)
     {
         var historyPageSize = config.GetInt32(MediaModule.HistoryPageSizeKey, 100);
@@ -76,6 +91,83 @@ internal sealed class MediaPoller(
         }
 
         state.Mutate(_ => snapshot);
+
+        await PublishAnomaliesAsync(snapshot, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Republie l'ensemble de ce qui va mal.
+    /// </summary>
+    /// <remarks>
+    /// Aucune anomalie n'est jamais fermée explicitement : ce qui cesse d'être republié est
+    /// résolu par le noyau (ADR-0005). Les détecteurs sont une projection du snapshot, pas des
+    /// émetteurs d'événements ponctuels.
+    /// </remarks>
+    private async Task PublishAnomaliesAsync(MediaSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        var thresholds = new DetectionThresholds(
+            StalledAfter: config.GetDuration(MediaModule.StalledAfterKey, TimeSpan.FromMinutes(30)),
+            GraceAfterAdded: config.GetDuration(MediaModule.GraceAfterAddedKey, TimeSpan.FromMinutes(10)));
+
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var anomaly in MediaDetectors.Detect(snapshot, thresholds, now))
+        {
+            await events.PublishAsync(anomaly, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var anomaly in DetectUnreachableServices(snapshot, now))
+        {
+            await events.PublishAsync(anomaly, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Service muet depuis assez de cycles pour que ce ne soit plus un simple redémarrage.
+    /// </summary>
+    /// <remarks>
+    /// Le seuil en cycles plutôt qu'en durée est délibéré : il suit automatiquement l'intervalle
+    /// de polling. Passer le cycle de 60 à 10 secondes ne doit pas rendre l'alerte huit fois
+    /// plus lente à apparaître.
+    /// </remarks>
+    private IEnumerable<HubEvent> DetectUnreachableServices(MediaSnapshot snapshot, DateTimeOffset now)
+    {
+        var required = Math.Max(1, config.GetInt32(MediaModule.UnreachableCyclesKey, 2));
+        var failing = snapshot.UnavailableSources
+            .Select(entry => entry.Split(' ', 2)[0])
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var service in new[] { "Radarr", "Sonarr", "Seerr", "qBittorrent" })
+        {
+            if (!failing.Contains(service))
+            {
+                _consecutiveFailures.Remove(service);
+                continue;
+            }
+
+            var count = _consecutiveFailures.GetValueOrDefault(service) + 1;
+            _consecutiveFailures[service] = count;
+
+            if (count < required)
+            {
+                continue;
+            }
+
+            yield return new HubEvent(
+                ModuleKey: "media",
+                Type: "media.service.unreachable",
+                Severity: HubEventSeverity.Critical,
+                Title: $"{service} injoignable",
+                Body: snapshot.UnavailableSources.FirstOrDefault(s => s.StartsWith(service, StringComparison.Ordinal))
+                      ?? $"{service} n'a pas répondu sur {count} cycles consécutifs.",
+                DedupeKey: $"media.service.unreachable:{service}",
+                Data: new Dictionary<string, string>
+                {
+                    ["service"] = service,
+                    ["cycles"] = count.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                },
+                OccurredAt: now);
+        }
     }
 
     /// <summary>

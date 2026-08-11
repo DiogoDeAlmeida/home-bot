@@ -26,3 +26,20 @@ export function formatUptime(timespan: string): string {
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' })
 }
+
+export function formatSpeed(bytesPerSecond: number): string {
+  return bytesPerSecond > 0 ? `${formatBytes(bytesPerSecond)}/s` : '—'
+}
+
+/** « 12 min », « 2 h 05 » — à partir d'un TimeSpan .NET, ou « — » quand la durée est inconnue. */
+export function formatDuration(timespan: string | null): string {
+  if (!timespan) return '—'
+
+  const match = /^(?:(\d+)\.)?(\d{2}):(\d{2}):(\d{2})/.exec(timespan)
+  if (!match) return timespan
+
+  const [, days, hours, minutes] = match
+  if (days) return `${Number(days)} j ${hours} h`
+  if (Number(hours) > 0) return `${Number(hours)} h ${minutes}`
+  return `${Number(minutes)} min`
+}

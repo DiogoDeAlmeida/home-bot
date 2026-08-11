@@ -3,8 +3,9 @@ import { SimpleGrid } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { useBackups, useModules } from '@/api/hooks'
-import type { SystemSnapshot } from '@/api/types'
+import type { MediaOverview, SystemSnapshot } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
+import { MediaOverviewWidget } from '@/components/widgets/MediaOverviewWidget'
 import { Alert, Badge, Card, Code, Group, Loader, Progress, Stack, Text } from '@/components/ui'
 import { formatBytes, formatDateTime, formatUptime } from '@/lib/utils'
 
@@ -55,11 +56,7 @@ export function DashboardPage() {
                 {widget.moduleKey}
               </Text>
             </Group>
-            {widget.key === 'system.overview' ? (
-              <SystemOverview snapshot={widget.data as SystemSnapshot} />
-            ) : (
-              <GenericWidget data={widget.data} />
-            )}
+            <WidgetBody widget={widget} />
           </Card>
         ))}
 
@@ -133,9 +130,17 @@ function SystemOverview({ snapshot }: { snapshot: SystemSnapshot }) {
               {formatBytes(volume.freeBytes)} libres · {volume.freePercent} %
             </Text>
           </Group>
+          {/* Les seuils viennent du snapshot, pas d'une constante recopiée : sinon un volume
+              sous le seuil d'avertissement lèverait une anomalie en s'affichant en vert. */}
           <Progress
             value={100 - volume.freePercent}
-            color={volume.freePercent < 10 ? 'red' : undefined}
+            color={
+              volume.freePercent < snapshot.criticalBelowPercent
+                ? 'red'
+                : volume.freePercent < snapshot.warnBelowPercent
+                  ? 'orange'
+                  : undefined
+            }
             size="sm"
           />
         </Stack>
@@ -144,9 +149,23 @@ function SystemOverview({ snapshot }: { snapshot: SystemSnapshot }) {
   )
 }
 
-/** Repli pour tout widget dont le front ne connaît pas encore la forme. */
-function GenericWidget({ data }: { data: unknown }) {
-  return <Code block>{JSON.stringify(data, null, 2)}</Code>
+/**
+ * Aiguillage vers le rendu propre à chaque widget.
+ *
+ * ADR-0006 : il n'y a pas de modèle de rendu partagé. Chaque widget connu a son composant ;
+ * le repli JSON n'existe que pour qu'un module tout juste écrit ne casse pas la page avant
+ * d'avoir le sien. **C'est un filet, pas une sortie finale** — un widget qui reste en JSON
+ * brut est un rendu manquant, pas un choix.
+ */
+function WidgetBody({ widget }: { widget: Widget }) {
+  switch (widget.key) {
+    case 'system.overview':
+      return <SystemOverview snapshot={widget.data as SystemSnapshot} />
+    case 'media.overview':
+      return <MediaOverviewWidget data={widget.data as MediaOverview} />
+    default:
+      return <Code block>{JSON.stringify(widget.data, null, 2)}</Code>
+  }
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
