@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using HomelabHub.Abstractions.Capabilities;
 using HomelabHub.Abstractions.Configuration;
 using HomelabHub.Abstractions.Events;
 using HomelabHub.Abstractions.Modules;
@@ -98,6 +99,23 @@ public static partial class HubCoreServiceCollectionExtensions
         services.AddSingleton<HubJournal>();
         services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<HubJournal>());
         services.AddSingleton<IHubJournal>(sp => sp.GetRequiredService<HubJournal>());
+
+        // Capacités portées par le noyau, sous la clé réservée « hub » — le pendant, côté
+        // capacités, de ce qu'ADR-0013 fait déjà pour la configuration (HubCapabilityCatalog).
+        // La mise en sommeil d'une anomalie appartient à AnomalyEngine, pas à un module : la
+        // rattacher à l'un d'eux aurait été arbitraire, et l'exécuter hors de
+        // ICapabilityExecutor l'aurait privée de l'autorisation, du journal d'audit et de
+        // l'exposition REST que toute autre mutation obtient gratuitement.
+        var hubCapabilityTypes = new List<Type>();
+
+        void AddHubCapability<T>() where T : class, IHubCapability
+        {
+            services.AddSingleton<T>();
+            hubCapabilityTypes.Add(typeof(T));
+        }
+
+        AddHubCapability<Anomalies.AnomalySnoozeCapability>();
+        services.AddSingleton(new HubCapabilityCatalog(hubCapabilityTypes));
 
         services.AddSingleton<RefreshCoordinator>();
         services.AddSingleton<IRefreshCoordinator>(sp => sp.GetRequiredService<RefreshCoordinator>());

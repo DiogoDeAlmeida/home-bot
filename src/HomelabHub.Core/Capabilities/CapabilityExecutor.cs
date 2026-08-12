@@ -1,5 +1,6 @@
 using System.Globalization;
 using HomelabHub.Abstractions.Capabilities;
+using HomelabHub.Core.Configuration;
 using HomelabHub.Core.Modules;
 using Microsoft.Extensions.Logging;
 
@@ -38,11 +39,17 @@ internal sealed class CapabilityExecutor(
 
         var descriptor = registered.Descriptor;
 
-        var activation = modules.GetActivation(registered.ModuleKey);
-        if (!activation.IsActive)
+        // Le pseudo-module « hub » n'a pas de bascule d'activation : le noyau n'a pas de
+        // désactivation à vérifier, il tourne ou le processus n'existe pas. ModuleCatalog.Get
+        // lèverait sur cette clé, puisqu'aucun module ne peut la revendiquer (ADR-0013).
+        if (!string.Equals(registered.ModuleKey, HubSettings.Prefix, StringComparison.OrdinalIgnoreCase))
         {
-            return CapabilityResult.Fail(
-                activation.BlockedReason ?? $"Le module « {registered.ModuleKey} » est désactivé.");
+            var activation = modules.GetActivation(registered.ModuleKey);
+            if (!activation.IsActive)
+            {
+                return CapabilityResult.Fail(
+                    activation.BlockedReason ?? $"Le module « {registered.ModuleKey} » est désactivé.");
+            }
         }
 
         if (!IsExposedTo(descriptor.Exposure, invocation.Source))

@@ -132,15 +132,19 @@ export const useAnomalies = (includeResolved = false) =>
     refetchInterval: 15_000,
   })
 
+// La mise en sommeil est la capacité noyau `hub.anomaly.snooze` (pas de module propriétaire :
+// c'est AnomalyEngine qui tient la table), exécutée par le même chemin que toute autre mutation
+// plutôt que par un endpoint dédié — même autorisation, même journal d'audit, et la réinvalidation
+// large de useRunCapability couvre déjà la liste des anomalies.
 export function useSnoozeAnomaly() {
-  const client = useQueryClient()
-  return useMutation({
-    // `hours` absent signifie « jusqu'à résolution » : le réarmement n'aura lieu qu'après un
-    // passage effectif par l'état résolu, pas à une échéance.
-    mutationFn: ({ key, hours }: { key: string; hours?: number }) =>
-      api.post(`/api/anomalies/${encodeURIComponent(key)}/snooze`, { hours: hours ?? null }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: keys.anomalies }),
-  })
+  const run = useRunCapability()
+  return {
+    ...run,
+    mutate: (
+      { key, hours }: { key: string; hours?: number },
+      options?: Parameters<typeof run.mutate>[1],
+    ) => run.mutate({ key: 'hub.anomaly.snooze', args: { key, hours: hours ?? null } }, options),
+  }
 }
 
 export const useJournal = () =>

@@ -1,4 +1,5 @@
 using HomelabHub.Abstractions.Capabilities;
+using HomelabHub.Core.Configuration;
 using HomelabHub.Core.Modules;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,9 +28,11 @@ internal sealed class CapabilityRegistry : ICapabilityRegistry
 {
     private readonly Dictionary<string, RegisteredCapability> _byKey;
 
-    public CapabilityRegistry(ModuleCatalog catalog, IServiceProvider services)
+    public CapabilityRegistry(ModuleCatalog catalog, HubCapabilityCatalog hubCapabilities,
+                              IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(hubCapabilities);
         ArgumentNullException.ThrowIfNull(services);
 
         var errors = new List<string>();
@@ -45,6 +48,18 @@ internal sealed class CapabilityRegistry : ICapabilityRegistry
                 errors.AddRange(CapabilityValidator.Validate(module.Key, descriptor));
                 registered.Add(new RegisteredCapability(module.Key, descriptor, capability));
             }
+        }
+
+        // Capacités du noyau : même validation, sous la clé réservée « hub » — le noyau est un
+        // pseudo-module aux yeux du validateur, comme il l'est déjà pour la configuration
+        // (ADR-0013, HubCapabilityCatalog).
+        foreach (var type in hubCapabilities.Types)
+        {
+            var capability = (IHubCapability)services.GetRequiredService(type);
+            var descriptor = capability.Descriptor;
+
+            errors.AddRange(CapabilityValidator.Validate(HubSettings.Prefix, descriptor));
+            registered.Add(new RegisteredCapability(HubSettings.Prefix, descriptor, capability));
         }
 
         foreach (var duplicate in registered
