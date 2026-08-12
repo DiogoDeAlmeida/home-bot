@@ -214,6 +214,15 @@ function Field({
       return (
         <PasswordInput
           {...common}
+          // `common.required` suit le schéma tel quel, mais Mantine le reporte sur l'attribut
+          // HTML natif `required` — qui bloque la soumission au niveau du navigateur, avant même
+          // que `missingRequired` (qui, lui, sait déjà qu'un secret enregistré et non retouché
+          // est satisfait) n'ait son mot à dire. Un secret déjà enregistré reste donc requis pour
+          // le schéma, mais pas pour ce champ-ci, qui est délibérément vide à l'écran : sans ce
+          // correctif, modifier n'importe quel autre réglage du même formulaire était bloqué tant
+          // que les secrets n'étaient pas retapés — le problème d'origine, déplacé une étape plus
+          // tôt, avant même l'envoi.
+          required={field.required && !field.value}
           autoComplete="new-password"
           value={value}
           placeholder={field.value ?? 'Non renseigné'}
