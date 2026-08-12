@@ -77,6 +77,17 @@ public sealed record MediaOverview(
 /// <param name="DownloadCount">Nombre de téléchargements distincts, jamais d'entrées de file.</param>
 /// <param name="EpisodeCount">Épisodes couverts. Zéro pour un film.</param>
 /// <param name="RequestedAt">Date de la demande Seerr, ou <c>null</c> pour un import manuel.</param>
+/// <param name="DownloadIds">
+/// Identifiant de chaque téléchargement du parcours — exactement l'argument attendu par
+/// <c>media.import.manual</c>, <c>media.download.pause</c> et <c>media.download.resume</c>.
+/// </param>
+/// <remarks>
+/// <b>Sans <see cref="DownloadIds"/>, agir sur un téléchargement était impossible depuis la
+/// seule vue qui les liste.</b> Trouvé en conditions réelles : <c>/media queue</c> affichait
+/// titre et progression, mais aucun identifiant à réutiliser pour <c>/media pause</c> — la
+/// commande existait, s'exécutait, mais personne ne pouvait jamais l'atteindre faute de savoir
+/// quoi lui donner.
+/// </remarks>
 public sealed record JourneySummary(
     string Key,
     string? Title,
@@ -89,7 +100,8 @@ public sealed record JourneySummary(
     TimeSpan? EstimatedTimeLeft,
     int DownloadCount,
     int EpisodeCount,
-    DateTimeOffset? RequestedAt)
+    DateTimeOffset? RequestedAt,
+    IReadOnlyList<string> DownloadIds)
 {
     public static JourneySummary From(MediaJourney journey)
     {
@@ -115,6 +127,10 @@ public sealed record JourneySummary(
             EstimatedTimeLeft: etas.Count > 0 ? etas.Max() : null,
             DownloadCount: journey.Downloads.Count,
             EpisodeCount: journey.Downloads.Sum(d => d.Episodes.Count),
-            RequestedAt: journey.Request?.RequestedAt);
+            RequestedAt: journey.Request?.RequestedAt,
+            // JoinKey, pas DownloadId : c'est la forme normalisée que les capacités comparent
+            // (TorrentControlCapability.ExecuteAsync met aussi en minuscules avant de chercher),
+            // et c'est la seule des deux qui n'a pas d'importance de casse pour qui la recopie.
+            DownloadIds: [.. journey.Downloads.Select(d => d.JoinKey)]);
     }
 }

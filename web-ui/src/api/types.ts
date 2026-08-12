@@ -166,6 +166,8 @@ export interface JourneySummary {
   downloadCount: number
   episodeCount: number
   requestedAt: string | null
+  /** Un par téléchargement du parcours — l'argument attendu par media.import.manual et media.download.{pause,resume}. */
+  downloadIds: string[]
 }
 
 /**

@@ -18,7 +18,7 @@ public sealed class DiscordWidgetRendererTests
         long downloadSpeed = 0, TimeSpan? eta = null,
         JourneyState state = JourneyState.Downloading) =>
         new("movie:1", title, MediaKind.Movie, state, needsAttention, progress,
-            downloadSpeed, 0, eta, 1, 0, null);
+            downloadSpeed, 0, eta, 1, 0, null, ["481b6e3617be4c88f96cb25e47c9d8272130071e"]);
 
     [Fact]
     public void Avant_le_premier_cycle_le_widget_le_dit_explicitement()

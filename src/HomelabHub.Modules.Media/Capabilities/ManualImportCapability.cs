@@ -33,7 +33,7 @@ internal sealed class ManualImportCapability(
         Description: "Force l'import d'un téléchargement terminé que le service refuse d'importer seul.",
         Parameters:
         [
-            new CapabilityParameter("download", "Identifiant du téléchargement",
+            new CapabilityParameter("download", "Identifiant du téléchargement (voir /media queue)",
                                     CapabilityParameterType.String, Required: true),
         ],
         Kind: CapabilityKind.Mutation,

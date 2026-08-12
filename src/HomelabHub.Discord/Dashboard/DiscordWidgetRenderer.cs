@@ -109,7 +109,13 @@ internal static class DiscordWidgetRenderer
             ? "bloqué"
             : percent.ToString(CultureInfo.InvariantCulture) + "%" + speedSuffix + etaSuffix;
 
-        return $"{icon} {title} — {detail}";
+        // En code inline, une ligne par téléchargement : c'est ce que /media pause et
+        // /media resume attendent en argument. Trouvé en conditions réelles — /media queue
+        // affichait titre et progression, mais aucun identifiant à réutiliser, ce qui rendait
+        // les deux commandes inatteignables faute de savoir quoi leur donner.
+        var ids = string.Concat(journey.DownloadIds.Select(id => $"\n   `{id}`"));
+
+        return $"{icon} {title} — {detail}{ids}";
     }
 
     /// <summary>

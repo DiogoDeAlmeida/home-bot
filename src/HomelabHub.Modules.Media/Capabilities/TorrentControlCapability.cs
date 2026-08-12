@@ -95,7 +95,7 @@ internal sealed class PauseDownloadCapability(IQBittorrentClient qbittorrent, IM
         Description: "Interrompt un téléchargement en cours dans qBittorrent.",
         Parameters:
         [
-            new CapabilityParameter("download", "Identifiant du téléchargement",
+            new CapabilityParameter("download", "Identifiant du téléchargement (voir /media queue)",
                                     CapabilityParameterType.String, Required: true),
         ],
         Kind: CapabilityKind.Mutation,
@@ -119,7 +119,7 @@ internal sealed class ResumeDownloadCapability(IQBittorrentClient qbittorrent, I
         Description: "Relance un téléchargement interrompu dans qBittorrent.",
         Parameters:
         [
-            new CapabilityParameter("download", "Identifiant du téléchargement",
+            new CapabilityParameter("download", "Identifiant du téléchargement (voir /media queue)",
                                     CapabilityParameterType.String, Required: true),
         ],
         Kind: CapabilityKind.Mutation,

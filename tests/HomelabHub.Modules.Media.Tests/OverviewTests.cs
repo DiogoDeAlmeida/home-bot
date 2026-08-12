@@ -166,6 +166,24 @@ public sealed class OverviewTests
     }
 
     [Fact]
+    public void Le_resume_porte_lidentifiant_de_chaque_telechargement()
+    {
+        // Bug trouvé en conditions réelles : /media queue affichait titre et progression, mais
+        // aucun identifiant à réutiliser — /media pause et /media resume restaient inatteignables
+        // faute de savoir quoi leur donner. DownloadIds est ce qui manquait.
+        var journey = new MediaJourney("m", MediaKind.Series, "m", null, null, null,
+        [
+            Download("AABB", eta: 60),
+            Download("CCDD", eta: 900),
+        ], JourneyState.Downloading);
+
+        var summary = JourneySummary.From(journey);
+
+        // JoinKey, pas DownloadId : la forme normalisée que les capacités comparent.
+        Assert.Equal(["aabb", "ccdd"], summary.DownloadIds);
+    }
+
+    [Fact]
     public void Les_sources_injoignables_sont_exposees_au_lieu_detre_tues()
     {
         // Une liste vide parce qu'un service est éteint ne doit pas se lire « rien ne
