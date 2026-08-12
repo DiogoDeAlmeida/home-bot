@@ -30,6 +30,28 @@ public static class HubInfrastructureServiceCollectionExtensions
         services.AddSingleton(platform);
         services.AddSingleton<IHubPlatform>(platform);
 
+        // Data Protection écrit chaque clé via Path.GetTempFileName() avant de la renommer à son
+        // emplacement final (fichier temporaire puis déplacement, pour l'atomicité) — sur Linux,
+        // ça résout TMPDIR, /tmp par défaut. Un /tmp en lecture seule (ProtectSystem=strict côté
+        // systemd, sans PrivateTmp) fait alors planter la toute première génération de clé, au
+        // premier /api/setup — trouvé en conditions réelles sur le LXC jetable, PrivateTmp=true
+        // ajouté à l'unité en réponse (deploy/systemd/homelabhub.service). Plutôt que de ne
+        // compter que sur ce réglage systemd, TMPDIR est repointé ici vers un répertoire déjà
+        // autorisé en écriture — celui des données elles-mêmes — pour que ce chemin ne dépende
+        // plus implicitement de ce que /tmp autorise ou non, sous systemd ou ailleurs.
+        //
+        // Fait ici plutôt que dans le constructeur de HubPlatform : cette variable est globale au
+        // processus, et HubPlatform est aussi construit directement par les tests d'infrastructure
+        // (TemporaryHub), plusieurs fois par run, en dehors de tout composition root. La muter
+        // depuis son constructeur ferait courir des instances de test après l'autre sur le même
+        // TMPDIR, sur Linux (donc en CI). AddHubInfrastructure, elle, n'est appelée qu'une fois
+        // par processus réel.
+        if (!OperatingSystem.IsWindows())
+        {
+            var tempDirectory = Directory.CreateDirectory(Path.Combine(platform.DataDirectory, "tmp")).FullName;
+            Environment.SetEnvironmentVariable("TMPDIR", tempDirectory);
+        }
+
         // Avant tout le reste : une deuxième instance qui continuerait au-delà de cette ligne
         // écrirait le keyring, la configuration et la base en concurrence avec la première, sans
         // qu'aucune des deux ne le sache. Trouvé en production — voir SingleInstanceLock.

@@ -91,12 +91,35 @@ le résultat connu est republié à chaque cycle comme l'exige ADR-0005.
 
 ## Vérifié en conditions réelles
 
-**Pas encore.** Compilé et relu, jamais exécuté sur un vrai LXC — voir
-[docs/03-deploiement.md](../03-deploiement.md). Avant tout LXC de production, la chaîne complète
-(création, installation, premier démarrage, mise à jour, rollback provoqué délibérément) doit
-être exercée sur un LXC jetable créé pour l'occasion. Cette section sera mise à jour à l'issue,
-avec les écarts trouvés — il y en aura probablement, si la tendance des quatre étapes
-précédentes se confirme.
+**En cours.** Premier passage sur un LXC jetable Debian 13 : `install.sh` échouait à
+`POST /api/setup` — `System.IO.IOException: Read-only file system : '/tmp/'`, Data Protection
+tentant de créer sa première clé via `Path.GetTempFileName()`. `ProtectSystem=strict` rend tout
+le système de fichiers en lecture seule y compris `/tmp`, et l'unité ne portait pas encore
+`PrivateTmp=true` pour lui en fournir un réinscriptible. Corrigé à deux niveaux — voir Décision 4
+— et confirmé par 250 tests toujours au vert, mais **pas encore reconfirmé par une réinstallation
+complète depuis zéro sur le LXC jetable**, ce que la tendance des quatre étapes précédentes
+suggère de ne pas tenir pour acquis avant de l'avoir vu. Cette section sera mise à jour à l'issue.
+
+## Décision 4 — TMPDIR ne dépend pas que du durcissement systemd
+
+Le durcissement (`ProtectSystem=strict`) et l'initialisation Data Protection n'avaient jamais
+tourné ensemble avant ce premier essai réel — le genre d'angle mort qu'aucun test sur un poste
+de développement Windows ne pouvait révéler, puisque DPAPI y remplace Data Protection sur
+système de fichiers et qu'aucun `/tmp` en lecture seule n'y existe.
+
+Deux corrections, non exclusives :
+
+- `PrivateTmp=true` ajouté à l'unité — pratique standard, qui fournit à cette unité un `/tmp`
+  privé et réinscriptible malgré `ProtectSystem=strict`.
+- `AddHubInfrastructure` (`HomelabHub.Infrastructure`) repointe `TMPDIR` vers un sous-répertoire
+  du répertoire de données, déjà autorisé en écriture, avant que Data Protection ne soit
+  configuré — pour que ce chemin ne dépende plus implicitement de ce que `/tmp` autorise ou non,
+  sous systemd ou ailleurs. Placé dans `AddHubInfrastructure` plutôt que dans le constructeur de
+  `HubPlatform` : cette variable est globale au processus, et `HubPlatform` est aussi construit
+  directement par les tests d'infrastructure, plusieurs fois par run — la muter depuis son
+  constructeur aurait fait courir des instances de test les unes après les autres sur le même
+  `TMPDIR`, sur Linux, donc en CI. `AddHubInfrastructure` n'est appelée qu'une fois par processus
+  réel (`Program.cs`).
 
 ## Conséquences
 

@@ -31,5 +31,14 @@ ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/opt/homelabhub/data /etc/homelabhub
 
+# ProtectSystem=strict rend /tmp lecture seule comme le reste du système, sauf ici : un /tmp
+# privé et réinscriptible, propre à cette unité. Trouvé manquant en conditions réelles — Data
+# Protection y écrit sa toute première clé via un fichier temporaire, et /api/setup plantait dès
+# le premier essai sur le LXC jetable (System.IO.IOException: Read-only file system : '/tmp/').
+# AddHubInfrastructure (ADR-0019) repointe en plus TMPDIR vers le répertoire de données
+# lui-même, pour que ce chemin ne dépende plus seulement de ce réglage-ci — les deux ne sont pas
+# exclusifs.
+PrivateTmp=true
+
 [Install]
 WantedBy=multi-user.target
