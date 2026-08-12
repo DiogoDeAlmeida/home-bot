@@ -12,6 +12,23 @@ namespace HomelabHub.Infrastructure.Tests;
 public sealed class BackupServiceTests
 {
     [Fact]
+    public async Task La_sauvegarde_reussit_alors_meme_que_le_verrou_de_premiere_instance_est_tenu()
+    {
+        // Bug trouvé en conditions réelles : system.backup.create échouait systématiquement,
+        // parce que BackupService archivait tout .local/data sans distinction — hub.lock
+        // compris, tenu en exclusivité par CE processus, en continu, précisément parce que
+        // c'est lui qui vient de créer la sauvegarde. Le garde-fou anti-double-instance
+        // (ADR-0018) faisait donc échouer la sauvegarde du même processus qui le détient.
+        using var hub = new TemporaryHub();
+        using var singleInstance = SingleInstanceLock.Acquire(hub.Platform.DataDirectory);
+
+        var archive = await hub.Backups.CreateAsync("test", TestContext.Current.CancellationToken);
+
+        var entries = ReadEntries(hub, archive.FileName);
+        Assert.DoesNotContain(entries, e => e.EndsWith("hub.lock", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Larchive_contient_la_base_le_keyring_et_la_configuration()
     {
         using var hub = new TemporaryHub();

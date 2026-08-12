@@ -33,7 +33,16 @@ namespace HomelabHub.Infrastructure;
 /// </remarks>
 public sealed class SingleInstanceLock : IDisposable
 {
-    private const string FileName = "hub.lock";
+    /// <summary>
+    /// Nom du fichier de verrou, dans le répertoire de données.
+    /// </summary>
+    /// <remarks>
+    /// Exposé pour que <see cref="Backup.BackupService"/> puisse l'exclure de l'archive : ce
+    /// fichier ne porte aucune donnée à préserver, seulement la détection d'un processus
+    /// vivant — et il est justement tenu ouvert en exclusivité par le processus qui archive,
+    /// ce qui ferait échouer la sauvegarde si on tentait de le lire.
+    /// </remarks>
+    internal const string FileName = "hub.lock";
 
     private readonly FileStream _handle;
 

@@ -179,6 +179,17 @@ internal sealed class BackupService(
                 continue;
             }
 
+            // Le verrou de première instance (ADR-0018) est tenu ouvert en exclusivité par CE
+            // processus, en continu — précisément le processus qui archive. Tenter de le lire
+            // lève : « The process cannot access the file... because it is being used by
+            // another process », alors que l'autre processus, c'est lui-même. Il ne porte de
+            // toute façon aucune donnée à préserver, seulement un PID et un horodatage.
+            if (string.Equals(Path.GetFileName(file), SingleInstanceLock.FileName,
+                              StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             // La base entre dans l'archive par son instantané, ajouté plus bas.
             if (skipDatabase
                 && Array.Exists(DatabaseFiles,
