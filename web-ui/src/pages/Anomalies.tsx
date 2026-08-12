@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { modals } from '@mantine/modals'
 import { notifications } from '@mantine/notifications'
-import { useAnomalies, useSnoozeAnomaly } from '@/api/hooks'
+import { useAnomalies, useRunCapability, useSnoozeAnomaly } from '@/api/hooks'
 import type { Anomaly, HubEventSeverity } from '@/api/types'
 import { PageTitle } from '@/components/Layout'
 import {
@@ -126,6 +127,9 @@ export function AnomaliesPage() {
 
               {anomaly.state === 'Open' && (
                 <Group gap="xs">
+                  {anomaly.type === 'media.import.pending' && anomaly.data?.downloadId && (
+                    <ResolveImportButton downloadId={anomaly.data.downloadId} />
+                  )}
                   <Button
                     size="compact-xs"
                     variant="default"
@@ -149,6 +153,62 @@ export function AnomaliesPage() {
         ))}
       </Stack>
     </>
+  )
+}
+
+/**
+ * Déclenche l'import manuel, avec la confirmation que la capacité exige.
+ *
+ * La confirmation n'est pas une politesse d'interface : `RequireConfirmation` est déclaré sur
+ * la capacité elle-même (ADR-0016), donc un import mal déclenché reste impossible sans intention
+ * explicite, quel que soit le canal. Cette modale est la traduction web de cette exigence.
+ */
+function ResolveImportButton({ downloadId }: { downloadId: string }) {
+  const run = useRunCapability()
+
+  const confirm = () =>
+    modals.openConfirmModal({
+      title: 'Importer manuellement',
+      children: (
+        <Stack gap="xs">
+          <Text size="sm">
+            Le fichier sera importé dans la bibliothèque avec la correspondance que le service a
+            retenue.
+          </Text>
+          <Text size="xs" c="dimmed">
+            Réversible, mais un import sur le mauvais média se corrige à la main.
+          </Text>
+        </Stack>
+      ),
+      labels: { confirm: 'Importer', cancel: 'Annuler' },
+      confirmProps: { color: 'orange' },
+      onConfirm: () =>
+        run.mutate(
+          { key: 'media.import.manual', args: { download: downloadId } },
+          {
+            onSuccess: (result) =>
+              notifications.show({
+                // Outcome 1 = Accepted : la commande est prise en compte, son aboutissement se
+                // constatera au cycle suivant.
+                color: result.outcome === 2 ? 'red' : 'blue',
+                title: 'Import manuel',
+                message: result.message ?? 'Demande transmise.',
+                autoClose: 8000,
+              }),
+            onError: (error) =>
+              notifications.show({
+                color: 'red',
+                title: 'Import manuel',
+                message: (error as Error).message,
+              }),
+          },
+        ),
+    })
+
+  return (
+    <Button size="compact-xs" color="orange" onClick={confirm} loading={run.isPending}>
+      Importer
+    </Button>
   )
 }
 

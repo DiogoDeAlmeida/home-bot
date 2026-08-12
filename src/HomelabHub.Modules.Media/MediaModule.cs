@@ -89,6 +89,7 @@ public sealed class MediaModule : IHubModule
                .AddHealthCheck<MediaHealthCheck>()
                .AddCapability<QueueOverviewCapability>()
                .AddCapability<QueueDetailCapability>()
+               .AddCapability<ManualImportCapability>()
                .AddWidget<MediaWidget>();
     }
 }

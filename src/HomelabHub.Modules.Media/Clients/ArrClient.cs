@@ -59,6 +59,22 @@ public interface IArrClient
     Task<ServiceResult<IReadOnlyList<ArrDiskSpace>>> GetDiskSpaceAsync(CancellationToken cancellationToken);
 
     Task<ServiceResult<IReadOnlyList<ArrHealthCheck>>> GetHealthAsync(CancellationToken cancellationToken);
+
+    /// <summary>Fichiers candidats à l'import manuel pour un téléchargement donné.</summary>
+    Task<ServiceResult<IReadOnlyList<ArrManualImportCandidate>>> GetManualImportCandidatesAsync(
+        string downloadId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Déclenche l'import manuel des candidats fournis.
+    /// </summary>
+    /// <remarks>
+    /// <b>Seule écriture de ce client.</b> Elle passe par <c>/api/v3/command</c>, qui met la
+    /// commande en file côté service : la réponse confirme la prise en compte, pas
+    /// l'aboutissement. C'est le cycle suivant qui dira si l'import a réussi, en constatant que
+    /// l'entrée a quitté la file.
+    /// </remarks>
+    Task<ServiceResult<string>> ExecuteManualImportAsync(
+        IReadOnlyList<ArrManualImportCandidate> candidates, CancellationToken cancellationToken);
 }
 
 /// <summary>Marqueur permettant au conteneur de distinguer les deux instances.</summary>
@@ -121,6 +137,80 @@ internal abstract class ArrClient(HttpClient http, ArrFlavor flavor) : IArrClien
         string downloadId, CancellationToken cancellationToken) =>
         GetPagedAsync<ArrHistoryRecord>(
             $"api/v3/history?downloadId={Uri.EscapeDataString(downloadId)}", cancellationToken);
+
+    public Task<ServiceResult<IReadOnlyList<ArrManualImportCandidate>>> GetManualImportCandidatesAsync(
+        string downloadId, CancellationToken cancellationToken) =>
+        GetListAsync<ArrManualImportCandidate>(
+            $"api/v3/manualimport?downloadId={Uri.EscapeDataString(downloadId)}", cancellationToken);
+
+    public async Task<ServiceResult<string>> ExecuteManualImportAsync(
+        IReadOnlyList<ArrManualImportCandidate> candidates, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(candidates);
+
+        if (candidates.Count == 0)
+        {
+            return ServiceResult.Fail<string>("Aucun fichier à importer.");
+        }
+
+        // Garde-fou : un candidat rejeté n'est pas importable, et forcer produirait au mieux un
+        // échec, au pire un fichier mal classé dans la bibliothèque.
+        var blocked = candidates.Where(c => c.Rejections.Count > 0).ToList();
+        if (blocked.Count > 0)
+        {
+            var reasons = blocked.SelectMany(c => c.Rejections)
+                                 .Select(r => r.Reason)
+                                 .Where(r => !string.IsNullOrWhiteSpace(r));
+
+            return ServiceResult.Fail<string>(
+                $"{flavor} refuse l'import : {string.Join(" ", reasons)}");
+        }
+
+        var command = new
+        {
+            name = "ManualImport",
+            importMode = "auto",
+            files = candidates.Select(c => new
+            {
+                path = c.Path,
+                movieId = c.Movie?.Id,
+                seriesId = c.SeriesId,
+                quality = c.Quality,
+                languages = c.Languages,
+                releaseGroup = c.ReleaseGroup,
+                indexerFlags = c.IndexerFlags,
+                downloadId = c.DownloadId,
+            }),
+        };
+
+        try
+        {
+            using var response = await http.PostAsJsonAsync("api/v3/command", command, Json, cancellationToken)
+                                           .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                return ServiceResult.Fail<string>(
+                    $"{flavor} a répondu {(int)response.StatusCode} : {Truncate(body)}");
+            }
+
+            return ServiceResult.Ok(
+                $"Import demandé pour {candidates.Count} fichier(s). "
+                + "Le cycle suivant confirmera qu'il a abouti.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return ServiceResult.Fail<string>(Describe(ex));
+        }
+    }
+
+    private static string Truncate(string value) =>
+        value.Length <= 200 ? value : value[..200] + "…";
 
     public Task<ServiceResult<IReadOnlyList<ArrHistoryRecord>>> GetRecentHistoryAsync(
         int pageSize, CancellationToken cancellationToken) =>

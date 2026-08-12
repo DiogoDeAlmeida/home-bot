@@ -177,6 +177,60 @@ public sealed record ArrHistoryRecord
     public int? EpisodeId { get; init; }
 }
 
+/// <summary>
+/// Un fichier candidat à l'import manuel, tel que <c>/api/v3/manualimport?downloadId=</c> le
+/// décrit.
+/// </summary>
+/// <remarks>
+/// <b>C'est la voie structurée</b>, par opposition à la prose de <c>statusMessages</c> : les
+/// <see cref="Rejections"/> disent en clair ce qui empêche l'import, ou sont vides quand rien
+/// ne l'empêche et qu'il ne manque qu'une confirmation humaine (ADR-0015).
+/// </remarks>
+public sealed record ArrManualImportCandidate
+{
+    public long Id { get; init; }
+
+    /// <summary>Chemin absolu du fichier téléchargé.</summary>
+    public string? Path { get; init; }
+
+    public string? Name { get; init; }
+
+    public long Size { get; init; }
+
+    public string? DownloadId { get; init; }
+
+    /// <summary>Film reconnu. <c>null</c> si Radarr n'a pas su l'identifier.</summary>
+    public ArrMovie? Movie { get; init; }
+
+    public int? SeriesId { get; init; }
+
+    public ArrQuality? Quality { get; init; }
+
+    public IReadOnlyList<ArrLanguage> Languages { get; init; } = [];
+
+    public string? ReleaseGroup { get; init; }
+
+    public int IndexerFlags { get; init; }
+
+    /// <summary>
+    /// Ce qui empêche l'import. <b>Vide signifie importable</b> — c'était le cas sur l'import
+    /// bloqué observé, qui n'attendait qu'une confirmation.
+    /// </summary>
+    public IReadOnlyList<ArrRejection> Rejections { get; init; } = [];
+}
+
+/// <param name="Reason">Motif du rejet, en clair.</param>
+/// <param name="Type">Gravité : « permanent » empêche l'import, « temporary » peut se résoudre.</param>
+public sealed record ArrRejection(string? Reason, string? Type);
+
+public sealed record ArrQuality(ArrQualityDefinition? Quality, ArrRevision? Revision);
+
+public sealed record ArrQualityDefinition(int Id, string? Name, string? Source, int Resolution, string? Modifier);
+
+public sealed record ArrRevision(int Version, int Real, bool IsRepack);
+
+public sealed record ArrLanguage(int Id, string? Name);
+
 public sealed record ArrSystemStatus(
     string? Version,
     string? AppName,
