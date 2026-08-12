@@ -130,6 +130,15 @@ envoie un `Referer` correct — les protections CSRF sont supposées aux valeurs
 > 100 exclut `192.168.0.0/16` du tunnel : c'est elle qui garde la WebUI joignable depuis le LAN.
 > Si l'API devient subitement injoignable, commencer par là.
 
+> **Le flux cookie est écrit, jamais exercé en production, et ce n'est pas un simple oubli de
+> vérification.** L'`AuthSubnetWhitelist` couvre tout le réseau local, pas la seule IP du hub —
+> tant que ce réglage reste large, la quasi-totalité des lectures passent sans jamais
+> authentifier, et le chemin de connexion/reconnexion ne se déclenche donc presque jamais. Le
+> code reste correct et se justifie le jour où cette liste blanche serait resserrée ; à traiter
+> comme une **dépendance de configuration non vérifiée**, distincte d'un chemin « pas encore
+> testé » qui le serait un jour au fil de l'usage normal — celui-ci ne le sera pas sans un geste
+> délibéré (retirer le hub de la liste, ou réduire la fenêtre de session qBittorrent).
+
 ## 7. Roadmap
 
 | Étape | Contenu | État |
