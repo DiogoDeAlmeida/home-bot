@@ -272,6 +272,14 @@ public static class MediaCorrelator
             Terminal: history.ContainsKey(group.Key) ? terminal : null,
             // Restitués tels quels, dédupliqués : les 22 entrées d'un pack répètent le même
             // message. On ne les interprète pas — la gravité vient de trackedDownloadStatus.
+            //
+            // Seul le tableau `messages` est repris ; le champ `title` du statusMessage est
+            // délibérément ignoré. Sur l'unique cas observé il portait le nom de la release,
+            // donc rien de plus que le titre de l'entrée — mais un échantillon de un ne dit pas
+            // s'il en va toujours ainsi. Il pourrait tout aussi bien porter une catégorie
+            // d'erreur dans un autre cas, et l'afficher comme un titre serait alors trompeur.
+            // Cette omission est une prudence voulue, pas un oubli : au second cas observé avec
+            // un `title` différent, c'est ici qu'il faudra trancher (ADR-0015).
             StatusMessages: [.. group.SelectMany(r => r.StatusMessages)
                                      .SelectMany(m => m.Messages)
                                      .Where(m => !string.IsNullOrWhiteSpace(m))

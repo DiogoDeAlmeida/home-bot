@@ -118,6 +118,29 @@ export interface HubEvent {
   occurredAt: string
 }
 
+export type AnomalyStateName = 'Open' | 'Snoozed' | 'Resolved'
+
+/**
+ * Une condition qui s'ouvre, dure et se résout. Le noyau n'en notifie que les transitions :
+ * un import bloqué depuis dix heures est une ligne, pas six cents.
+ */
+export interface Anomaly {
+  dedupeKey: string
+  moduleKey: string
+  type: string
+  severity: HubEventSeverity
+  title: string
+  body: string | null
+  state: AnomalyStateName
+  openedAt: string
+  lastSeenAt: string
+  resolvedAt: string | null
+  snoozedUntil: string | null
+  occurrences: number
+  durationSeconds: number
+  data: Record<string, string> | null
+}
+
 export interface VolumeUsage {
   label: string
   path: string

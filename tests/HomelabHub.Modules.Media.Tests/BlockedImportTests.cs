@@ -80,6 +80,33 @@ public sealed class BlockedImportTests
         Assert.Equal(1d, download.Progress);
     }
 
+    [Theory]
+    [InlineData("downloading", DownloadState.Downloading)]
+    [InlineData("importPending", DownloadState.Importing)]
+    [InlineData("importing", DownloadState.Importing)]
+    [InlineData("importBlocked", DownloadState.Importing)]
+    [InlineData("imported", DownloadState.Completed)]
+    [InlineData("failedPending", DownloadState.Unknown)]
+    public void Chaque_valeur_de_trackedDownloadState_a_une_correspondance_verrouillee(
+        string raw, DownloadState expected)
+    {
+        // `importBlocked` était mappé par chance, pas par prévoyance : il n'avait jamais été
+        // observé quand la correspondance a été écrite. Maintenant qu'on connaît la valeur,
+        // ce test la fige — et documente au passage celles qui restent non observées.
+        var record = new ArrQueueRecord
+        {
+            DownloadId = "AA",
+            TrackedDownloadState = raw,
+            TrackedDownloadStatus = "ok",
+            MovieId = 1,
+        };
+
+        var snapshot = MediaCorrelator.Correlate(new CorrelationInput(
+            [record], [], [], [], [], [], DateTimeOffset.UtcNow, []));
+
+        Assert.Equal(expected, snapshot.Journeys[0].Downloads[0].State);
+    }
+
     [Fact]
     public void Le_parcours_demande_une_intervention()
     {
@@ -110,6 +137,24 @@ public sealed class BlockedImportTests
 
         var anomaly = Assert.Single(events, e => e.Type == "media.import.pending");
         Assert.Contains("Manual Import required", anomaly.Body!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Un_import_bloque_ne_produit_quune_seule_anomalie()
+    {
+        // Constaté en conditions réelles : l'import bloqué levait aussi « santé dégradée »,
+        // puisqu'un import bloqué a toujours trackedDownloadStatus=warning. L'utilisateur
+        // recevait « Manual Import required » puis « le service rapporte un état Warning »,
+        // qui n'ajoute rien. Le détecteur générique se tait quand un détecteur spécifique
+        // a déjà nommé la cause.
+        var events = MediaDetectors.Detect(
+            Snapshot(),
+            new DetectionThresholds(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(10)),
+            DateTimeOffset.UtcNow);
+
+        Assert.Single(events);
+        Assert.Equal("media.import.pending", events[0].Type);
+        Assert.DoesNotContain(events, e => e.Type == "media.download.unhealthy");
     }
 
     [Fact]

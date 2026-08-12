@@ -96,6 +96,7 @@ app.MapSetupAndAuth();
 app.MapHub();
 app.MapModules();
 app.MapCapabilities();
+app.MapAnomalies();
 
 // Une route d'API inexistante doit répondre 404 en JSON, pas renvoyer la page React : sinon un
 // appel mal orthographié réussit avec du HTML et le bug se cherche longtemps.

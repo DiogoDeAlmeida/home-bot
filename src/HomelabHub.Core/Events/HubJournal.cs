@@ -25,7 +25,8 @@ public interface IHubJournal
 /// rétention de 14 jours ou 100 000 lignes.
 /// </para>
 /// </remarks>
-internal sealed class HubJournal(ILogger<HubJournal> logger) : IEventPublisher, IHubJournal
+internal sealed class HubJournal(Anomalies.AnomalyEngine anomalies, ILogger<HubJournal> logger)
+    : IEventPublisher, IHubJournal
 {
     private const int Capacity = 500;
 
@@ -34,6 +35,11 @@ internal sealed class HubJournal(ILogger<HubJournal> logger) : IEventPublisher, 
     public Task PublishAsync(HubEvent hubEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(hubEvent);
+
+        // Un événement porteur d'une clé de déduplication est une anomalie : le moteur en tient
+        // l'état et n'en tirera qu'une notification à l'ouverture et une à la résolution. Les
+        // autres sont des faits ponctuels, journalisés et rien de plus (ADR-0005).
+        anomalies.Observe(hubEvent.ModuleKey, hubEvent);
 
         _events.Enqueue(hubEvent);
         while (_events.Count > Capacity && _events.TryDequeue(out _))

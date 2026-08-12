@@ -42,8 +42,19 @@ public static class MediaDetectors
             foreach (var download in journey.Downloads)
             {
                 AddStalled(events, journey, download, thresholds, now);
-                AddImportPending(events, journey, download, now);
-                AddUnhealthy(events, journey, download, now);
+
+                // Précédence entre détecteurs. Un import bloqué a toujours une santé dégradée :
+                // les deux détecteurs se déclencheraient sur le même téléchargement, et
+                // l'utilisateur recevrait « Manual Import required » puis « le service rapporte
+                // un état Warning », qui n'ajoute rien. Constaté en conditions réelles.
+                //
+                // Le détecteur générique ne parle donc que lorsqu'aucun détecteur spécifique
+                // n'a couvert le cas — c'est son rôle : dire qu'il se passe quelque chose qu'on
+                // ne sait pas encore nommer.
+                if (!AddImportPending(events, journey, download, now))
+                {
+                    AddUnhealthy(events, journey, download, now);
+                }
             }
         }
 
@@ -129,12 +140,13 @@ public static class MediaDetectors
     /// code d'erreur.
     /// </para>
     /// </remarks>
-    private static void AddImportPending(
+    /// <returns><c>true</c> si ce téléchargement est couvert, pour que le détecteur générique se taise.</returns>
+    private static bool AddImportPending(
         List<HubEvent> events, MediaJourney journey, DownloadItem download, DateTimeOffset now)
     {
         if (download.State != DownloadState.Importing)
         {
-            return;
+            return false;
         }
 
         var explanation = download.StatusMessages.Count > 0
@@ -154,10 +166,12 @@ public static class MediaDetectors
                 ["journey"] = journey.Key,
             },
             OccurredAt: now));
+
+        return true;
     }
 
     /// <summary>
-    /// Santé rapportée dégradée.
+    /// Santé rapportée dégradée, sans cause déjà nommée.
     /// </summary>
     /// <remarks>
     /// Signalé immédiatement, mais <b>toujours en avertissement, jamais en erreur</b> : tant que

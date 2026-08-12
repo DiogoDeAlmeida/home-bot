@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './client'
 import type {
+  Anomaly,
   BackupArchive,
   CapabilityResult,
   CapabilitySummary,
@@ -20,6 +21,7 @@ export const keys = {
   capabilities: ['capabilities'] as const,
   backups: ['backups'] as const,
   journal: ['journal'] as const,
+  anomalies: ['anomalies'] as const,
 }
 
 // ── Installation et session ──────────────────────────────────────────────────────
@@ -122,6 +124,24 @@ export function useRunCapability() {
 
 export const useBackups = () =>
   useQuery({ queryKey: keys.backups, queryFn: () => api.get<BackupArchive[]>('/api/backups') })
+
+export const useAnomalies = (includeResolved = false) =>
+  useQuery({
+    queryKey: [...keys.anomalies, includeResolved],
+    queryFn: () => api.get<Anomaly[]>(`/api/anomalies${includeResolved ? '?all=true' : ''}`),
+    refetchInterval: 15_000,
+  })
+
+export function useSnoozeAnomaly() {
+  const client = useQueryClient()
+  return useMutation({
+    // `hours` absent signifie « jusqu'à résolution » : le réarmement n'aura lieu qu'après un
+    // passage effectif par l'état résolu, pas à une échéance.
+    mutationFn: ({ key, hours }: { key: string; hours?: number }) =>
+      api.post(`/api/anomalies/${encodeURIComponent(key)}/snooze`, { hours: hours ?? null }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: keys.anomalies }),
+  })
+}
 
 export const useJournal = () =>
   useQuery({

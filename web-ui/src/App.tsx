@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import { useSession, useSetupState } from '@/api/hooks'
 import { Layout } from '@/components/Layout'
 import { Center, Loader } from '@/components/ui'
+import { AnomaliesPage } from '@/pages/Anomalies'
 import { DashboardPage } from '@/pages/Dashboard'
 import { JournalPage } from '@/pages/Journal'
 import { LoginPage } from '@/pages/Login'
@@ -41,6 +42,7 @@ export function App() {
           <Route index element={<DashboardPage />} />
           <Route path="modules" element={<ModulesPage />} />
           <Route path="parametres" element={<SettingsPage />} />
+          <Route path="anomalies" element={<AnomaliesPage />} />
           <Route path="journal" element={<JournalPage />} />
           <Route path="*" element={<DashboardPage />} />
         </Route>

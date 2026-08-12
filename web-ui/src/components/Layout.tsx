@@ -6,6 +6,7 @@ const NAV = [
   { to: '/', label: 'Tableau de bord', end: true },
   { to: '/modules', label: 'Modules', end: false },
   { to: '/parametres', label: 'Paramètres', end: false },
+  { to: '/anomalies', label: 'Anomalies', end: false },
   { to: '/journal', label: 'Journal', end: false },
 ]
 

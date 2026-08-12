@@ -86,6 +86,9 @@ public static partial class HubCoreServiceCollectionExtensions
         services.AddSingleton<ICapabilityRegistry, CapabilityRegistry>();
         services.AddSingleton<ICapabilityExecutor, CapabilityExecutor>();
 
+        services.AddSingleton<Anomalies.AnomalyEngine>();
+        services.AddSingleton<Anomalies.IAnomalyEngine>(sp => sp.GetRequiredService<Anomalies.AnomalyEngine>());
+
         services.AddSingleton<HubJournal>();
         services.AddSingleton<IEventPublisher>(sp => sp.GetRequiredService<HubJournal>());
         services.AddSingleton<IHubJournal>(sp => sp.GetRequiredService<HubJournal>());

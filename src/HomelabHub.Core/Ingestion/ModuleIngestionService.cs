@@ -27,6 +27,7 @@ internal sealed class ModuleIngestionService(
     IModuleRegistry registry,
     IHubConfigStore config,
     RefreshCoordinator refresh,
+    Anomalies.AnomalyEngine anomalies,
     IServiceProvider services,
     ILogger<ModuleIngestionService> logger) : BackgroundService
 {
@@ -74,11 +75,12 @@ internal sealed class ModuleIngestionService(
     private async Task RunCycleAsync(ModuleDescriptor module, PollerRegistration registration,
                                      string name, CancellationToken stoppingToken)
     {
-        // Bornes du cycle. ADR-0005 : la réconciliation des anomalies — « ce qui n'est plus
-        // republié est résolu » — ne devra avoir lieu que si le cycle se termine sans
-        // exception, sinon un service injoignable clôturerait à tort toutes ses alertes.
-        // Le moteur d'anomalies arrive à l'étape 4 ; la fenêtre, elle, est ici.
+        // Bornes du cycle (ADR-0005). La réconciliation — « ce qui n'est plus republié est
+        // résolu » — n'a lieu que si le cycle se termine sans exception : sinon un service
+        // injoignable clôturerait à tort toutes ses alertes, produisant une salve de « tout va
+        // bien » au moment précis où quelque chose ne va pas.
         var succeeded = false;
+        anomalies.BeginCycle(module.Key);
 
         try
         {
@@ -88,6 +90,7 @@ internal sealed class ModuleIngestionService(
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+            anomalies.CompleteCycle(module.Key, succeeded: false, DateTimeOffset.UtcNow);
             return;
         }
         catch (Exception ex)
@@ -95,8 +98,17 @@ internal sealed class ModuleIngestionService(
             logger.LogError(ex, "Cycle {Poller} du module {Module} en échec.", name, module.Key);
         }
 
+        foreach (var transition in anomalies.CompleteCycle(module.Key, succeeded, DateTimeOffset.UtcNow))
+        {
+            // Le routage vers un canal de notification viendra avec l'adaptateur ; à ce stade
+            // les transitions sont journalisées et lisibles par l'API.
+            logger.LogInformation("Anomalie {Kind} : {Key} — {Title}",
+                transition.Kind, transition.Anomaly.DedupeKey, transition.Anomaly.Title);
+        }
+
+        var succeededLabel = succeeded;
         logger.LogDebug("Cycle {Poller} du module {Module} terminé (succès : {Succeeded}).",
-            name, module.Key, succeeded);
+            name, module.Key, succeededLabel);
     }
 
     private TimeSpan ResolveInterval(string moduleKey, PollerRegistration registration) =>
