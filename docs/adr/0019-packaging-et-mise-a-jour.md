@@ -91,14 +91,19 @@ le résultat connu est republié à chaque cycle comme l'exige ADR-0005.
 
 ## Vérifié en conditions réelles
 
-**En cours.** Premier passage sur un LXC jetable Debian 13 : `install.sh` échouait à
-`POST /api/setup` — `System.IO.IOException: Read-only file system : '/tmp/'`, Data Protection
-tentant de créer sa première clé via `Path.GetTempFileName()`. `ProtectSystem=strict` rend tout
-le système de fichiers en lecture seule y compris `/tmp`, et l'unité ne portait pas encore
-`PrivateTmp=true` pour lui en fournir un réinscriptible. Corrigé à deux niveaux — voir Décision 4
-— et confirmé par 250 tests toujours au vert, mais **pas encore reconfirmé par une réinstallation
-complète depuis zéro sur le LXC jetable**, ce que la tendance des quatre étapes précédentes
-suggère de ne pas tenir pour acquis avant de l'avoir vu. Cette section sera mise à jour à l'issue.
+**En cours — deux tentatives, deux découvertes distinctes, toujours pas de passage propre de bout
+en bout.**
+
+1. Premier passage sur un LXC jetable Debian 13 : `install.sh` échouait à `POST /api/setup` —
+   `System.IO.IOException: Read-only file system : '/tmp/'`, Data Protection tentant de créer sa
+   première clé via `Path.GetTempFileName()`. Corrigé (Décision 4), retagué `v0.1.2`.
+2. Second passage, sur un LXC jetable neuf : `v0.1.2` a produit une boucle de dix-neuf
+   redémarrages en quelques secondes au lieu de s'installer — deux bugs indépendants (Décision 6).
+   Corrigés.
+
+**Pas encore reconfirmé par une réinstallation complète depuis zéro** — ce que la tendance de
+cette étape suggère justement de ne pas tenir pour acquis avant de l'avoir vu. Cette section sera
+mise à jour à l'issue.
 
 ## Décision 4 — TMPDIR ne dépend pas que du durcissement systemd
 
@@ -149,6 +154,36 @@ redémarrage qu'aux arrêts que le *processus* déclenche lui-même — un `syst
 à l'installation initiale — fermeture d'un trou que ce correctif a rendu visible : sans ça, une
 version qui compte sur une directive nouvelle dans l'unité (comme `PrivateTmp=true` l'a été) ne
 la trouverait qu'après une réinstallation complète, jamais après une mise à jour normale.
+
+## Décision 6 — deux bugs de plus, trouvés en enchaînant les deux précédents en vrai
+
+Le tag `v0.1.2` (Décision 5) a produit une boucle de dix-neuf redémarrages en quelques secondes
+sur le LXC jetable, plutôt que le comportement voulu. Deux causes, indépendantes l'une de
+l'autre :
+
+**`hub.service.restart` avait une description de 135 caractères** (le détail « lu au démarrage
+seulement » était descriptif, pas nécessaire dans les 100 caractères qu'une commande Discord
+tolère — ce détail vit dans l'aide de chaque champ Discord du formulaire à la place, pas dans
+la capacité elle-même). `CapabilityValidator` a fait exactement ce qu'on lui demande : refuser de
+démarrer plutôt que d'enregistrer une commande Discord invalide en silence.
+
+**`StartLimitIntervalSec`/`StartLimitBurst` étaient sous `[Service]`, pas `[Unit]`.** Ces deux
+clés bornent le nombre de redémarrages d'une unité dans une fenêtre de temps, mais elles sont
+génériques à *tout* type d'unité — systemd les lit dans `[Unit]`, pas dans les options propres à
+`[Service]`. Placées au mauvais endroit, elles étaient sans effet, et `Restart=always` (Décision
+5) n'avait donc plus aucune limite : chaque tentative échouait sur la même
+`HubConfigurationException`, et systemd relançait indéfiniment. Combinées, ces deux causes ont
+produit exactement le scénario que `StartLimitBurst` existe pour empêcher — ce qui a permis de
+le débusquer.
+
+**Un test valide maintenant toutes les déclarations de capacités réelles à l'exécution de la
+suite** (`HomelabHub.Host.Tests.CapabilityDeclarationsTests`) : il assemble le même noyau que
+`Program.cs` — `AddHubCore` avec `SystemModule` et `MediaModule` réels — et résout
+`ICapabilityRegistry`, dont le constructeur lève sur toute capacité mal déclarée. Vérifié en
+retirant temporairement la correction : le test échoue avec exactement le message
+`HubConfigurationException` vu sur le LXC. Ce test aurait cassé la CI avant le tag `v0.1.2`,
+exactement comme `ModuleIsolationTests` (ADR-0010) attrape une référence de module interdite
+avant l'exécution plutôt qu'au premier déploiement.
 
 ## Conséquences
 

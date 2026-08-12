@@ -52,8 +52,11 @@ internal sealed class ServiceRestartCapability(
     public CapabilityDescriptor Descriptor { get; } = new(
         Key: $"{HubSettings.Prefix}.service.restart",
         DisplayName: "Redémarrer le service",
+        // 100 caractères maximum pour une commande (CapabilityValidator) : la description
+        // complète, avec le détail « lu au démarrage seulement », vit dans l'aide de chacun des
+        // quatre champs Discord du formulaire (HubSettings.Schema) plutôt qu'ici.
         Description: "Redémarre le hub — nécessaire après un changement de configuration Discord " +
-                      "(jeton, serveur, salon, rôle), qui n'est lu qu'au démarrage.",
+                      "(jeton, serveur, rôle).",
         Parameters: [],
         Kind: CapabilityKind.Mutation,
         Exposure: CapabilityExposure.All,
