@@ -72,11 +72,12 @@ public sealed class ManualImportTests
     public void Toutes_les_mutations_du_module_exigent_une_confirmation()
     {
         // Règle de portée : une opération qui écrit chez un service tiers ne doit pas pouvoir
-        // partir sur un clic isolé. Ce test attrapera la prochaine mutation ajoutée sans
-        // confirmation, y compris celles de qBittorrent à venir.
+        // partir sur un clic isolé.
         var mutations = new IHubCapability[]
         {
             new Capabilities.ManualImportCapability(null!, null!, null!),
+            new Capabilities.PauseDownloadCapability(null!, null!),
+            new Capabilities.ResumeDownloadCapability(null!, null!),
         };
 
         Assert.All(mutations, capability =>

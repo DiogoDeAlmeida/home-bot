@@ -90,6 +90,8 @@ public sealed class MediaModule : IHubModule
                .AddCapability<QueueOverviewCapability>()
                .AddCapability<QueueDetailCapability>()
                .AddCapability<ManualImportCapability>()
+               .AddCapability<PauseDownloadCapability>()
+               .AddCapability<ResumeDownloadCapability>()
                .AddWidget<MediaWidget>();
     }
 }

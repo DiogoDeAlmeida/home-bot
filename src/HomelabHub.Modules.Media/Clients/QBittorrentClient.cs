@@ -13,6 +13,21 @@ public interface IQBittorrentClient
     Task<ServiceResult<QBittorrentTransferInfo>> GetTransferInfoAsync(CancellationToken cancellationToken);
 
     Task<ServiceResult<string>> GetVersionAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Interrompt un torrent.
+    /// </summary>
+    /// <remarks>
+    /// <b>Seule écriture de ce client.</b> Sondé sans risque contre un hash inexistant sur
+    /// l'instance réelle (5.1.0) : <c>stop</c>/<c>start</c> répondent 200, les anciens noms
+    /// <c>pause</c>/<c>resume</c> répondent 404 — l'API a été renommée en 5.0. Un hash inconnu
+    /// répond également 200 sans rien faire ; ce n'est donc pas ce statut qui dit si le torrent
+    /// visé existait, seul l'état lu au cycle suivant le dira.
+    /// </remarks>
+    Task<ServiceResult<bool>> StopAsync(string hash, CancellationToken cancellationToken);
+
+    /// <summary>Relance un torrent interrompu.</summary>
+    Task<ServiceResult<bool>> StartAsync(string hash, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -65,6 +80,67 @@ internal sealed class QBittorrentClient(
         {
             return ServiceResult.Fail<string>(Describe(ex));
         }
+    }
+
+    public Task<ServiceResult<bool>> StopAsync(string hash, CancellationToken cancellationToken) =>
+        ControlAsync("api/v2/torrents/stop", hash, cancellationToken);
+
+    public Task<ServiceResult<bool>> StartAsync(string hash, CancellationToken cancellationToken) =>
+        ControlAsync("api/v2/torrents/start", hash, cancellationToken);
+
+    /// <remarks>
+    /// Même gabarit de réauthentification que <see cref="SendAsync{T}"/>, pour une réponse sans
+    /// corps plutôt qu'un objet JSON : qBittorrent renvoie 200 avec un corps vide sur un succès.
+    /// </remarks>
+    private async Task<ServiceResult<bool>> ControlAsync(
+        string path, string hash, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(hash);
+
+        try
+        {
+            var response = await PostHashAsync(path, hash, cancellationToken).ConfigureAwait(false);
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                response.Dispose();
+
+                if (!await AuthenticateAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    return ServiceResult.Fail<bool>(
+                        "qBittorrent a refusé l'authentification. Vérifier l'identifiant et le mot de passe.");
+                }
+
+                response = await PostHashAsync(path, hash, cancellationToken).ConfigureAwait(false);
+            }
+
+            using (response)
+            {
+                return response.IsSuccessStatusCode
+                    ? ServiceResult.Ok(true)
+                    : ServiceResult.Fail<bool>($"qBittorrent a répondu {(int)response.StatusCode} sur {path}.");
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return ServiceResult.Fail<bool>(Describe(ex));
+        }
+    }
+
+    /// <remarks>
+    /// <c>using</c> à l'intérieur d'une méthode <c>async</c> qui attend l'envoi avant de
+    /// retourner : le contenu du formulaire doit rester vivant jusqu'à ce que la requête soit
+    /// effectivement écrite sur le fil, pas seulement jusqu'à ce que la tâche soit créée.
+    /// </remarks>
+    private async Task<HttpResponseMessage> PostHashAsync(
+        string path, string hash, CancellationToken cancellationToken)
+    {
+        using var form = new FormUrlEncodedContent([new KeyValuePair<string, string>("hashes", hash)]);
+        return await http.PostAsync(path, form, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<ServiceResult<T>> SendAsync<T>(string path, CancellationToken cancellationToken)

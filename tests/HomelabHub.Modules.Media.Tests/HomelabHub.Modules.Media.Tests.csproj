@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="WireMock.Net" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,9 +22,5 @@
   <ItemGroup>
     <Content Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
-  <!-- WireMock.Net viendra quand il faudra éprouver le comportement HTTP du client lui-même —
-       délais, réessais, 403 de qBittorrent. Pour la forme des réponses, les fixtures suffisent
-       et sont plus fidèles. -->
 
 </Project>

@@ -23,10 +23,13 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- Éprouve le comportement HTTP du client qBittorrent lui-même — réauthentification sur
+         403 — plutôt que la forme de ses réponses, que les fixtures couvrent déjà. -->
+    <PackageVersion Include="WireMock.Net" Version="2.14.0" />
   </ItemGroup>
 
   <!-- Ajoutés aux étapes suivantes, volontairement absents ici :
-       EF Core + SQLite, Discord.Net 3.20.1, Serilog, Polly, WireMock.Net.
+       Discord.Net 3.20.1, Serilog, Polly.
        L'étape 0 ne tire aucune dépendance qu'elle n'utilise pas. -->
 
 </Project>
