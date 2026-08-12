@@ -28,6 +28,7 @@ internal sealed class ModuleIngestionService(
     IHubConfigStore config,
     RefreshCoordinator refresh,
     Anomalies.AnomalyEngine anomalies,
+    IEnumerable<Anomalies.IAnomalyNotifier> notifiers,
     IServiceProvider services,
     ILogger<ModuleIngestionService> logger) : BackgroundService
 {
@@ -100,10 +101,27 @@ internal sealed class ModuleIngestionService(
 
         foreach (var transition in anomalies.CompleteCycle(module.Key, succeeded, DateTimeOffset.UtcNow))
         {
-            // Le routage vers un canal de notification viendra avec l'adaptateur ; à ce stade
-            // les transitions sont journalisées et lisibles par l'API.
             logger.LogInformation("Anomalie {Kind} : {Key} — {Title}",
                 transition.Kind, transition.Anomaly.DedupeKey, transition.Anomaly.Title);
+
+            foreach (var notifier in notifiers)
+            {
+                try
+                {
+                    await notifier.NotifyAsync(transition, stoppingToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // Convention §14 : un canal de notification en panne ne doit pas priver les
+                    // autres, ni interrompre le cycle qui a produit la transition.
+                    logger.LogError(ex, "Notification de la transition {Kind} pour {Key} en échec.",
+                        transition.Kind, transition.Anomaly.DedupeKey);
+                }
+            }
         }
 
         var succeededLabel = succeeded;

@@ -7,6 +7,12 @@
   <ItemGroup>
     <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
     <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
+    <!-- Un adaptateur peut référencer un module pour lui offrir un rendu dédié (ADR-0006) —
+         ce n'est pas la frontière qu'ADR-0010 protège, qui interdit la direction inverse
+         (un module ne connaît qu'Abstractions ; c'est vérifié par ModuleIsolationTests). Sans
+         cette référence, le tableau de bord Discord ne pourrait que dumper MediaOverview en
+         clé/valeur brut plutôt qu'en palmarès lisible. -->
+    <ProjectReference Include="..\HomelabHub.Modules.Media\HomelabHub.Modules.Media.csproj" />
   </ItemGroup>
 
   <ItemGroup>
