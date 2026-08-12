@@ -46,28 +46,32 @@ internal sealed class ManualImportCapability(
     {
         ArgumentNullException.ThrowIfNull(invocation);
 
-        var downloadId = invocation.GetString("download").ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(downloadId))
+        var joinKey = invocation.GetString("download").ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(joinKey))
         {
             return CapabilityResult.Fail("Aucun téléchargement indiqué.");
         }
 
         // Le snapshot dit à quel service s'adresser : interroger les deux serait inutile, et
         // importer un film via Sonarr n'aurait aucun sens.
-        var journey = state.Current.Journeys
-            .FirstOrDefault(j => j.Downloads.Any(d => d.DownloadId == downloadId));
+        var match = state.Current.Journeys
+            .SelectMany(j => j.Downloads.Select(d => (Journey: j, Download: d)))
+            .FirstOrDefault(x => x.Download.JoinKey == joinKey);
 
-        if (journey is null)
+        if (match.Journey is null)
         {
             return CapabilityResult.Fail(
                 "Ce téléchargement n'est pas dans la vue courante. "
                 + "Attendre le prochain cycle, ou vérifier qu'il est encore en file.");
         }
 
-        IArrClient client = journey.MediaType == MediaKind.Movie ? radarr : sonarr;
+        IArrClient client = match.Journey.MediaType == MediaKind.Movie ? radarr : sonarr;
 
-        var candidates = await client.GetManualImportCandidatesAsync(downloadId, cancellationToken)
-                                     .ConfigureAwait(false);
+        // DownloadId et non JoinKey : les routes filtrées par downloadId des *arr sont sensibles
+        // à la casse, et une requête en minuscules revient vide sans lever la moindre erreur.
+        var candidates = await client
+            .GetManualImportCandidatesAsync(match.Download.DownloadId, cancellationToken)
+            .ConfigureAwait(false);
 
         if (!candidates.Success)
         {

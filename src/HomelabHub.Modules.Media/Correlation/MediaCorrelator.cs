@@ -260,7 +260,9 @@ public static class MediaCorrelator
         history.TryGetValue(group.Key, out var terminal);
 
         return new DownloadItem(
-            DownloadId: group.Key,
+            // La clé du groupe est normalisée pour joindre ; on conserve ici la forme que le
+            // service a donnée, car c'est elle qu'il faudra lui représenter (cf. JoinKey).
+            DownloadId: first.DownloadId!,
             Title: first.Title,
             Size: first.Size,
             SizeLeft: first.SizeLeft,

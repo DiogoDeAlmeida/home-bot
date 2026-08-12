@@ -111,10 +111,10 @@ public static class MediaDetectors
             Body: string.Create(CultureInfo.GetCultureInfo("fr-FR"),
                 $"Aucune activité depuis {idleFor.Value.TotalMinutes:0} minutes, "
                 + $"à {download.Progress:P0} — {torrent.NumSeeds} source(s) connectée(s)."),
-            DedupeKey: $"media.download.stalled:{download.DownloadId}",
+            DedupeKey: $"media.download.stalled:{download.JoinKey}",
             Data: new Dictionary<string, string>
             {
-                ["downloadId"] = download.DownloadId,
+                ["downloadId"] = download.JoinKey,
                 ["journey"] = journey.Key,
                 ["idleMinutes"] = idleFor.Value.TotalMinutes.ToString("0", CultureInfo.InvariantCulture),
             },
@@ -159,10 +159,10 @@ public static class MediaDetectors
             Severity: HubEventSeverity.Warning,
             Title: $"Import en attente : {journey.Title ?? journey.Key}",
             Body: explanation,
-            DedupeKey: $"media.import.pending:{download.DownloadId}",
+            DedupeKey: $"media.import.pending:{download.JoinKey}",
             Data: new Dictionary<string, string>
             {
-                ["downloadId"] = download.DownloadId,
+                ["downloadId"] = download.JoinKey,
                 ["journey"] = journey.Key,
             },
             OccurredAt: now));
@@ -193,10 +193,10 @@ public static class MediaDetectors
             Severity: HubEventSeverity.Warning,
             Title: $"Téléchargement signalé : {journey.Title ?? journey.Key}",
             Body: $"Le service rapporte un état « {download.Health} » sur ce téléchargement.",
-            DedupeKey: $"media.download.unhealthy:{download.DownloadId}",
+            DedupeKey: $"media.download.unhealthy:{download.JoinKey}",
             Data: new Dictionary<string, string>
             {
-                ["downloadId"] = download.DownloadId,
+                ["downloadId"] = download.JoinKey,
                 ["journey"] = journey.Key,
                 ["health"] = download.Health.ToString(),
             },

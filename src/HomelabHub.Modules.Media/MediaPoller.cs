@@ -187,6 +187,8 @@ internal sealed class MediaPoller(
     {
         var unresolved = snapshot.Journeys
             .Where(j => j.State == JourneyState.Unresolved)
+            // DownloadId et non JoinKey : la route ?downloadId= de Radarr et Sonarr est
+            // sensible à la casse, et une requête en minuscules revient vide sans erreur.
             .SelectMany(j => j.Downloads.Where(d => d.Terminal is null)
                                         .Select(d => (Journey: j, d.DownloadId)))
             // Borne dure : si des dizaines de parcours sont indéterminés, le problème est la

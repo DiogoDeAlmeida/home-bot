@@ -165,7 +165,11 @@ public sealed record MediaJourney(
 /// saison produit une entrée de file par épisode, toutes porteuses du même <c>downloadId</c> et
 /// de la même taille répétée. <see cref="Size"/> est donc pris <i>une fois</i>, jamais sommé.
 /// </remarks>
-/// <param name="DownloadId">Hash normalisé en minuscules — la clé de jointure.</param>
+/// <param name="DownloadId">
+/// Hash <b>tel que le service l'a donné</b>, en majuscules. C'est cette valeur qu'il faut lui
+/// représenter : ses routes filtrées par <c>downloadId</c> sont sensibles à la casse.
+/// Pour joindre, utiliser <see cref="DownloadItem.JoinKey"/>.
+/// </param>
 /// <param name="Title">Titre de la release.</param>
 /// <param name="Size">Taille du torrent, prise sur une seule entrée.</param>
 /// <param name="SizeLeft">Reste à télécharger, pris sur une seule entrée.</param>
@@ -196,6 +200,25 @@ public sealed record DownloadItem(
     TerminalOutcome? Terminal,
     IReadOnlyList<string> StatusMessages)
 {
+    /// <summary>
+    /// Clé de jointure, normalisée en minuscules.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Même motif que <see cref="QBittorrentTorrent.JoinKey"/> : <b>on garde ce que le service a
+    /// dit, et on normalise seulement au moment de comparer.</b> La distinction n'est pas
+    /// cosmétique — Radarr renvoie le hash en majuscules, qBittorrent en minuscules, et les
+    /// routes <c>?downloadId=</c> des <c>*arr</c> sont sensibles à la casse.
+    /// </para>
+    /// <para>
+    /// Une version antérieure ne conservait que la forme normalisée et la réutilisait pour
+    /// interroger Radarr. Les appels revenaient systématiquement vides — sans erreur, sans
+    /// journal, indiscernables d'un « rien à signaler ». C'est la panne la plus coûteuse à
+    /// diagnostiquer : celle qui réussit.
+    /// </para>
+    /// </remarks>
+    public string JoinKey => DownloadId.ToLowerInvariant();
+
     public double Progress => Size <= 0 ? 0d : Math.Clamp((double)(Size - SizeLeft) / Size, 0d, 1d);
 
     /// <summary>

@@ -175,7 +175,10 @@ public sealed class CorrelationCases
         // Seul le téléchargement courant est présent : l'ancien n'est plus dans la file, donc
         // plus dans le parcours. Rien ne reste ouvert sur lui.
         var download = Assert.Single(journey.Downloads);
-        Assert.Equal(nouveau.ToLowerInvariant(), download.DownloadId);
+
+        // DownloadId conserve la casse du service ; c'est JoinKey qui se compare.
+        Assert.Equal(nouveau, download.DownloadId);
+        Assert.Equal(nouveau.ToLowerInvariant(), download.JoinKey);
         Assert.Null(download.Terminal);
         Assert.Equal(JourneyState.Downloading, journey.State);
     }
