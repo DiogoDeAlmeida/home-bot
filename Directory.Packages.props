@@ -8,8 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup Label="Microsoft.Extensions — aligné sur .NET 10 (LTS, support jusqu'au 14/11/2028)">
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
+    <!-- Aligné sur 10.0.11 par EF Core : le pinning transitif central refuse qu'une dépendance
+         d'EF tire Microsoft.Extensions.* plus haut que ce qui est déclaré ici. -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup Label="Persistance">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">

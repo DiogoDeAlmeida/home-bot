@@ -19,6 +19,8 @@ public static class HubSettings
     public const string BackupRetentionKey = "hub.backup.retention";
     public const string BackupMinimumIntervalKey = "hub.backup.minimumInterval";
     public const string LogLevelKey = "hub.logging.level";
+    public const string JournalRetentionDaysKey = "hub.journal.retentionDays";
+    public const string JournalMaximumRowsKey = "hub.journal.maxRows";
 
     /// <summary>
     /// Les clés du schéma sont relatives — <c>backup.retention</c> — et préfixées par
@@ -40,7 +42,11 @@ public static class HubSettings
                        new ConfigOption(nameof(LogLevel.Error), "Erreur seulement"),
                    ],
                    defaultValue: nameof(LogLevel.Information),
-                   help: "Prend effet immédiatement, sans redémarrage ni accès SSH.");
+                   help: "Prend effet immédiatement, sans redémarrage ni accès SSH.")
+        .AddInt("journal.retentionDays", "Rétention du journal (jours)", defaultValue: 14,
+                help: "Les événements plus anciens sont supprimés par la purge quotidienne.")
+        .AddInt("journal.maxRows", "Lignes de journal conservées", defaultValue: 100_000,
+                help: "Seconde borne : la première des deux limites atteinte l'emporte.");
 }
 
 /// <summary>

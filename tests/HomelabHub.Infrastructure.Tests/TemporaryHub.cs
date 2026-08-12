@@ -1,17 +1,26 @@
 using HomelabHub.Core.Configuration;
 using HomelabHub.Infrastructure.Backup;
 using HomelabHub.Infrastructure.Configuration;
+using HomelabHub.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace HomelabHub.Infrastructure.Tests;
 
 /// <summary>Une installation jetable du hub, sur disque, pour les tests d'infrastructure.</summary>
+/// <remarks>
+/// La base est un <b>vrai</b> fichier SQLite migré, pas un fournisseur en mémoire. Le mode WAL,
+/// <c>VACUUM INTO</c> et le comportement des index n'existent pas dans le provider InMemory :
+/// tester contre lui vérifierait un moteur que le hub n'utilise nulle part.
+/// </remarks>
 internal sealed class TemporaryHub : IDisposable
 {
     private readonly string _root;
+    private readonly ServiceProvider? _services;
 
-    public TemporaryHub()
+    public TemporaryHub(bool withDatabase = false)
     {
         _root = Path.Combine(Path.GetTempPath(), "homelabhub-tests", Guid.NewGuid().ToString("N"));
 
@@ -25,8 +34,35 @@ internal sealed class TemporaryHub : IDisposable
         Platform = new HubPlatform(Options);
         Store = new JsonHubConfigStore(Platform, new EphemeralDataProtectionProvider(),
                                        NullLogger<JsonHubConfigStore>.Instance);
-        Backups = new BackupService(Platform, Options, Store, NullLogger<BackupService>.Instance);
+
+        if (withDatabase)
+        {
+            var path = Path.Combine(Platform.DataDirectory, HubDatabase.FileName);
+
+            _services = new ServiceCollection()
+                .AddLogging()
+                .AddDbContextFactory<HubDbContext>(b => b.UseSqlite(HubDatabase.ConnectionStringFor(path)))
+                .BuildServiceProvider();
+
+            Contexts = _services.GetRequiredService<IDbContextFactory<HubDbContext>>();
+            Database = new HubDatabase(Contexts, Platform, NullLogger<HubDatabase>.Instance);
+            Database.Migrate();
+
+            Anomalies = new SqliteAnomalyStore(Contexts);
+            Journal = new SqliteJournalStore(Contexts);
+        }
+
+        Backups = new BackupService(Platform, Options, Store, NullLogger<BackupService>.Instance,
+                                    Database);
     }
+
+    public IDbContextFactory<HubDbContext>? Contexts { get; }
+
+    public HubDatabase? Database { get; }
+
+    public SqliteAnomalyStore? Anomalies { get; }
+
+    public SqliteJournalStore? Journal { get; }
 
     public HubOptions Options { get; }
 
@@ -54,6 +90,11 @@ internal sealed class TemporaryHub : IDisposable
     {
         Backups.Dispose();
         Store.Dispose();
+
+        // Le pool de connexions SQLite garde le fichier ouvert : sans cette libération, le
+        // répertoire refuserait d'être supprimé sous Windows.
+        _services?.Dispose();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
 
         try
         {

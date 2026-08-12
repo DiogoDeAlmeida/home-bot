@@ -25,10 +25,27 @@ internal sealed class BackupService(
     HubPlatform platform,
     HubOptions options,
     IHubConfigStore config,
-    ILogger<BackupService> logger) : IHubBackupService, IDisposable
+    ILogger<BackupService> logger,
+    Persistence.HubDatabase? database = null) : IHubBackupService, IDisposable
 {
     private const string FilePrefix = "homelabhub-";
     private const string FileExtension = ".zip";
+
+    /// <summary>
+    /// Fichiers de la base, écartés de la copie brute.
+    /// </summary>
+    /// <remarks>
+    /// En mode WAL, les écritures récentes vivent dans <c>-wal</c> et non dans le fichier
+    /// principal. Copier les trois fichiers pendant que le hub tourne produit une archive qui
+    /// s'ouvre, se restaure, et a perdu — ou mélangé — les dernières transactions. La base entre
+    /// dans l'archive par <c>VACUUM INTO</c>, jamais par <c>File.Copy</c>.
+    /// </remarks>
+    private static readonly string[] DatabaseFiles =
+    [
+        Persistence.HubDatabase.FileName,
+        Persistence.HubDatabase.FileName + "-wal",
+        Persistence.HubDatabase.FileName + "-shm",
+    ];
 
     // Deux sauvegardes simultanées produiraient deux archives partielles du même instant.
     private readonly SemaphoreSlim _lock = new(1, 1);
@@ -48,13 +65,35 @@ internal sealed class BackupService(
             var temporary = path + ".tmp";
 
             var entries = 0;
+            var snapshot = database is null ? null : path + ".db";
 
-            using (var stream = File.Create(temporary))
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
+            try
             {
-                entries += AddDirectory(archive, platform.DataDirectory, "data",
-                                        excluded: platform.BackupsDirectory);
-                entries += AddDirectory(archive, platform.ConfigDirectory, "config", excluded: null);
+                using (var stream = File.Create(temporary))
+                using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
+                {
+                    entries += AddDirectory(archive, platform.DataDirectory, "data",
+                                            excluded: platform.BackupsDirectory,
+                                            skipDatabase: database is not null);
+                    entries += AddDirectory(archive, platform.ConfigDirectory, "config",
+                                            excluded: null, skipDatabase: false);
+
+                    if (snapshot is not null && database is not null)
+                    {
+                        database.SnapshotTo(snapshot);
+                        archive.CreateEntryFromFile(
+                            snapshot, $"data/{Persistence.HubDatabase.FileName}",
+                            CompressionLevel.Optimal);
+                        entries++;
+                    }
+                }
+            }
+            finally
+            {
+                if (snapshot is not null && File.Exists(snapshot))
+                {
+                    File.Delete(snapshot);
+                }
             }
 
             RestrictPermissions(temporary);
@@ -115,7 +154,8 @@ internal sealed class BackupService(
         }
     }
 
-    private static int AddDirectory(ZipArchive archive, string source, string prefix, string? excluded)
+    private static int AddDirectory(ZipArchive archive, string source, string prefix,
+                                    string? excluded, bool skipDatabase)
     {
         if (!Directory.Exists(source))
         {
@@ -135,6 +175,15 @@ internal sealed class BackupService(
 
             // Un .tmp est une écriture en cours : l'archiver capturerait un état incohérent.
             if (file.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            // La base entre dans l'archive par son instantané, ajouté plus bas.
+            if (skipDatabase
+                && Array.Exists(DatabaseFiles,
+                                name => string.Equals(Path.GetFileName(file), name,
+                                                      StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
             }

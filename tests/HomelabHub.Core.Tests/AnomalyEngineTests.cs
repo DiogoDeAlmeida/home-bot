@@ -20,7 +20,8 @@ public sealed class AnomalyEngineTests
 
     private static readonly DateTimeOffset Start = new(2026, 8, 12, 10, 0, 0, TimeSpan.Zero);
 
-    private static AnomalyEngine NewEngine() => new(NullLogger<AnomalyEngine>.Instance);
+    private static AnomalyEngine NewEngine(IAnomalyStore? store = null) =>
+        new(store ?? new RecordingAnomalyStore(), NullLogger<AnomalyEngine>.Instance);
 
     private static HubEvent Event(HubEventSeverity severity = HubEventSeverity.Warning,
                                   string title = "Import en attente") =>

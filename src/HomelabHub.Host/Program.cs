@@ -1,9 +1,12 @@
 using System.Reflection;
+using HomelabHub.Abstractions.Platform;
 using HomelabHub.Core;
+using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
 using HomelabHub.Host.Api;
 using HomelabHub.Host.Auth;
 using HomelabHub.Infrastructure;
+using HomelabHub.Infrastructure.Persistence;
 using HomelabHub.Modules.Media;
 using HomelabHub.Modules.SystemInfo;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -75,6 +78,56 @@ app.Services.ValidateHubDeclarations();
 // Le niveau stocké prend effet avant même le premier journal applicatif.
 logLevel.ApplyFrom(app.Services.GetRequiredService<IHubConfigStore>());
 
+// ─── Séquence de démarrage de la base (ADR-0007) ─────────────────────────────────────
+//
+//  sauvegarde → migration → hydratation. Dans cet ordre, et fatale à la première erreur.
+//
+//  Le principe : une migration qui échoue à mi-chemin laisse un schéma que personne n'a
+//  jamais testé. Continuer à démarrer là-dessus donnerait un hub qui tourne, notifie, et
+//  écrit dans une base à moitié transformée — un dégât silencieux. Refuser de démarrer est
+//  bruyant, immédiat, et l'archive prise juste avant permet de revenir en arrière.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<HubDatabase>();
+    var startup = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+
+    try
+    {
+        var pending = database.PendingMigrations();
+
+        // Sauvegarder uniquement s'il y a quelque chose à perdre ET quelque chose à changer.
+        // Une archive à chaque démarrage ferait tourner la rétention à vide et chasserait les
+        // archives qui comptent — celles d'avant les migrations.
+        if (pending.Count > 0 && database.Exists)
+        {
+            startup.LogInformation("{Count} migration(s) en attente : sauvegarde préalable.",
+                pending.Count);
+
+            var archive = await scope.ServiceProvider.GetRequiredService<IHubBackupService>()
+                .CreateAsync($"avant migration ({string.Join(", ", pending)})",
+                             CancellationToken.None);
+
+            startup.LogInformation("Sauvegarde de sécurité : {File}.", archive.FileName);
+        }
+
+        database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        startup.LogCritical(ex,
+            "Migration de la base impossible. Le hub refuse de démarrer sur un schéma incertain. " +
+            "La dernière archive de {Directory} contient l'état d'avant la tentative.",
+            scope.ServiceProvider.GetRequiredService<IHubPlatform>().DataDirectory);
+
+        return 1;
+    }
+}
+
+// La table d'anomalies est rechargée avant le premier cycle d'ingestion : une anomalie
+// toujours présente ne doit pas être vue comme nouvelle, donc renotifiée, à chaque
+// redémarrage. C'est le bénéfice entier de la persistance.
+app.Services.HydrateHubState();
+
 // L'interface React, buildée dans wwwroot par Vite, est servie en statique par ce même
 // processus : une seule origine, donc aucun CORS et aucun proxy inverse à configurer.
 app.UseDefaultFiles();
@@ -107,6 +160,11 @@ app.Map("/api/{**rest}", () => Results.NotFound(new { error = "unknown_endpoint"
 app.MapFallbackToFile("index.html").AllowAnonymous();
 
 await app.RunAsync();
+
+// Le code de sortie est lu par systemd : 0 pour un arrêt normal, 1 quand la migration a été
+// refusée plus haut. Un Restart=on-failure distingue ainsi une mise à jour cassée d'un arrêt
+// demandé, et cesse de relancer un binaire qui ne peut pas démarrer.
+return 0;
 
 /// <summary>Point d'entrée exposé pour les tests d'intégration.</summary>
 public partial class Program;

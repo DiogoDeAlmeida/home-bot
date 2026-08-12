@@ -1,9 +1,13 @@
 using HomelabHub.Abstractions.Platform;
+using HomelabHub.Core.Anomalies;
 using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
+using HomelabHub.Core.Events;
 using HomelabHub.Infrastructure.Backup;
 using HomelabHub.Infrastructure.Configuration;
+using HomelabHub.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,6 +38,21 @@ public static class HubInfrastructureServiceCollectionExtensions
                 .SetApplicationName("HomelabHub");
 
         services.AddSingleton<IHubConfigStore, JsonHubConfigStore>();
+
+        // La base vit dans le répertoire de données : couverte par la sauvegarde, épargnée par
+        // une mise à jour (ADR-0007). Une fabrique plutôt qu'un DbContext injecté : les magasins
+        // sont des singletons appelés depuis autant de boucles qu'il y a de pollers, et un
+        // DbContext n'est pas sûr entre threads.
+        var databasePath = Path.Combine(platform.DataDirectory, HubDatabase.FileName);
+        services.AddDbContextFactory<HubDbContext>(builder =>
+            builder.UseSqlite(HubDatabase.ConnectionStringFor(databasePath)));
+
+        services.AddSingleton<HubDatabase>();
+
+        // Enregistrés avant AddHubCore, qui n'ajoute ses implémentations en mémoire que si
+        // personne n'en a fourni : monter l'infrastructure suffit à rendre l'état durable.
+        services.AddSingleton<IAnomalyStore, SqliteAnomalyStore>();
+        services.AddSingleton<IJournalStore, SqliteJournalStore>();
 
         // IHubBackupService reste une dépendance du noyau et du Host : aucun module ne peut le
         // résoudre, puisqu'aucun module ne référence Core (ADR-0014).

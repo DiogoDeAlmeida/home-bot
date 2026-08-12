@@ -9,6 +9,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <!-- Design n'est utilisé que par l'outil de migration, jamais à l'exécution : il ne doit
+         pas suivre dans la publication. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\HomelabHub.Abstractions\HomelabHub.Abstractions.csproj" />
     <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
   </ItemGroup>

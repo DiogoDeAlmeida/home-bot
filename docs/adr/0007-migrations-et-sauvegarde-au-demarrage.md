@@ -48,6 +48,12 @@ restaure — c'est-à-dire au pire moment.
 
 ## La base n'existe pas encore, et c'est délibéré
 
+> **Depuis le 12 août 2026, cette section n'est plus vraie** : la base est arrivée avec ce qui
+> l'exigeait, et la séquence décrite plus haut est câblée. Voir
+> [ADR-0017](0017-la-table-danomalies-est-le-premier-etat-possede.md). Le raisonnement ci-dessous
+> est conservé tel quel : il explique pourquoi le report était le bon choix, et à quelle
+> condition il devait prendre fin.
+
 À l'étape 1, la configuration est un dictionnaire clé/valeur sans aucune relation. Elle vit dans
 un fichier JSON, secrets chiffrés, écrit de façon atomique. **SQLite et EF Core n'ont pas été
 introduits**, et ce report est un choix, pas un oubli.

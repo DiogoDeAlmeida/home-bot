@@ -86,6 +86,12 @@ public static partial class HubCoreServiceCollectionExtensions
         services.AddSingleton<ICapabilityRegistry, CapabilityRegistry>();
         services.AddSingleton<ICapabilityExecutor, CapabilityExecutor>();
 
+        // Magasins par défaut : rien sur disque. L'infrastructure les remplace par leurs versions
+        // SQLite via TryAdd inversé — elle enregistre les siens avant AddHubCore, et ces deux
+        // lignes ne font que garantir qu'un noyau monté seul, en test, reste fonctionnel.
+        services.TryAddSingleton<Anomalies.IAnomalyStore, Anomalies.NullAnomalyStore>();
+        services.TryAddSingleton<IJournalStore, InMemoryJournalStore>();
+
         services.AddSingleton<Anomalies.AnomalyEngine>();
         services.AddSingleton<Anomalies.IAnomalyEngine>(sp => sp.GetRequiredService<Anomalies.AnomalyEngine>());
 
@@ -96,6 +102,28 @@ public static partial class HubCoreServiceCollectionExtensions
         services.AddSingleton<RefreshCoordinator>();
         services.AddSingleton<IRefreshCoordinator>(sp => sp.GetRequiredService<RefreshCoordinator>());
         services.AddHostedService<ModuleIngestionService>();
+        services.AddHostedService<RetentionService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Recharge l'état possédé par le hub — aujourd'hui la table d'anomalies.
+    /// </summary>
+    /// <remarks>
+    /// À appeler après la migration de la base et <b>avant</b> que le premier cycle d'ingestion
+    /// n'ait lieu : une anomalie rechargée après son propre cycle serait vue comme nouvelle, et
+    /// renotifiée — soit exactement le bruit que la persistance sert à supprimer.
+    /// </remarks>
+    public static IServiceProvider HydrateHubState(this IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var catalog = services.GetRequiredService<ModuleCatalog>();
+        var keys = catalog.Descriptors.Select(d => d.Key).ToList();
+
+        services.GetRequiredService<Anomalies.AnomalyEngine>()
+                .Hydrate(keys, DateTimeOffset.UtcNow);
 
         return services;
     }

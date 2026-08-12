@@ -74,3 +74,12 @@ dotnet_diagnostic.CA2016.severity = error
 # Les tests nomment leurs cas en clair : « Requete_saison_avec_pack_unique_... »
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.IDE1006.severity = none
+
+# Migrations EF Core : code généré par l'outil, réécrit à chaque « migrations add ». Le
+# styler à la main serait perdu au prochain passage, et le corriger après coup ferait
+# diverger le fichier de ce que l'outil produit — donc du diff que la revue attend.
+[src/**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.CA1861.severity = none

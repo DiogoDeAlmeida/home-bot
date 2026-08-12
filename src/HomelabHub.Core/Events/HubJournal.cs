@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using HomelabHub.Abstractions.Events;
 using Microsoft.Extensions.Logging;
 
@@ -21,17 +20,15 @@ public interface IHubJournal
 /// qui sert dès maintenant : voir ce qui se passe.
 /// </para>
 /// <para>
-/// Le tampon est borné et vit en mémoire. L'historique persistant viendra avec la base, avec sa
-/// rétention de 14 jours ou 100 000 lignes.
+/// Le stockage est délégué à <see cref="IJournalStore"/> : tampon glissant en mémoire par
+/// défaut, table SQLite avec rétention — 14 jours ou 100 000 lignes — quand la base est là.
 /// </para>
 /// </remarks>
-internal sealed class HubJournal(Anomalies.AnomalyEngine anomalies, ILogger<HubJournal> logger)
-    : IEventPublisher, IHubJournal
+internal sealed class HubJournal(
+    Anomalies.AnomalyEngine anomalies,
+    IJournalStore store,
+    ILogger<HubJournal> logger) : IEventPublisher, IHubJournal
 {
-    private const int Capacity = 500;
-
-    private readonly ConcurrentQueue<HubEvent> _events = new();
-
     public Task PublishAsync(HubEvent hubEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(hubEvent);
@@ -41,10 +38,15 @@ internal sealed class HubJournal(Anomalies.AnomalyEngine anomalies, ILogger<HubJ
         // autres sont des faits ponctuels, journalisés et rien de plus (ADR-0005).
         anomalies.Observe(hubEvent.ModuleKey, hubEvent);
 
-        _events.Enqueue(hubEvent);
-        while (_events.Count > Capacity && _events.TryDequeue(out _))
+        try
         {
-            // Tampon glissant.
+            store.Append(hubEvent);
+        }
+        catch (Exception ex)
+        {
+            // Le contrat d'IEventPublisher est de ne jamais lever : un journal en panne ne doit
+            // pas interrompre l'ingestion qui l'alimente.
+            logger.LogError(ex, "Écriture du journal impossible pour {Type}.", hubEvent.Type);
         }
 
         var level = hubEvent.Severity switch
@@ -62,8 +64,5 @@ internal sealed class HubJournal(Anomalies.AnomalyEngine anomalies, ILogger<HubJ
     }
 
     public IReadOnlyList<HubEvent> Recent(int count = 100, HubEventSeverity? minimumSeverity = null) =>
-        [.. _events
-            .Where(e => minimumSeverity is null || e.Severity >= minimumSeverity)
-            .Reverse()
-            .Take(Math.Clamp(count, 1, Capacity))];
+        store.Recent(count, minimumSeverity);
 }
