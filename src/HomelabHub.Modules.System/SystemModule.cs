@@ -1,6 +1,7 @@
 using HomelabHub.Abstractions.Configuration;
 using HomelabHub.Abstractions.Modules;
 using HomelabHub.Modules.SystemInfo.Capabilities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HomelabHub.Modules.SystemInfo;
 
@@ -31,6 +32,13 @@ public sealed class SystemModule : IHubModule
     /// <summary>Cadence d'observation.</summary>
     public const string IntervalKey = "pollIntervalSeconds";
 
+    /// <summary>
+    /// Cadence de vérification d'une nouvelle version sur GitHub. Distincte de
+    /// <see cref="IntervalKey"/> — l'API non authentifiée limite à 60 requêtes par heure, quand
+    /// le poller lui-même tourne par défaut chaque minute.
+    /// </summary>
+    public const string UpdateCheckIntervalHoursKey = "update.checkIntervalHours";
+
     public string Key => "system";
 
     public string DisplayName => "Système";
@@ -44,11 +52,16 @@ public sealed class SystemModule : IHubModule
                 help: "Au-delà, l'anomalie passe en critique. Doit rester inférieur au seuil "
                       + "d'avertissement.")
         .AddDuration(IntervalKey, "Intervalle d'observation", TimeSpan.FromMinutes(1),
-                     help: "Le module ne sollicite que le système de fichiers local : inutile d'être agressif.");
+                     help: "Le module ne sollicite que le système de fichiers local : inutile d'être agressif.")
+        .AddDuration(UpdateCheckIntervalHoursKey, "Vérification de nouvelle version", TimeSpan.FromHours(12),
+                     help: "Abaisser pour tester sans attendre — l'API GitHub non authentifiée tolère "
+                           + "60 requêtes par heure, largement assez même resserré à quelques minutes.");
 
     public void Register(IModuleRegistrationContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+
+        context.Services.AddHttpClient<IGitHubReleaseClient, GitHubReleaseClient>(GitHubReleaseClient.Configure);
 
         context.AddState(SystemSnapshot.Empty)
                .AddPoller<SystemPoller>(TimeSpan.FromMinutes(1), IntervalKey)

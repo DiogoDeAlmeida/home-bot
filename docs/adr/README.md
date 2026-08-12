@@ -26,3 +26,4 @@ Une décision ne se modifie pas : elle se remplace par une nouvelle qui la super
 | [0016](0016-extensibilite-des-adaptateurs.md) | Extensibilité des adaptateurs : corrigé, et dette assumée | Acceptée |
 | [0017](0017-la-table-danomalies-est-le-premier-etat-possede.md) | La table d'anomalies est le premier état réellement possédé | Acceptée |
 | [0018](0018-verrou-de-premiere-instance.md) | Un verrou de première instance, pas un fichier PID | Acceptée |
+| [0019](0019-packaging-et-mise-a-jour.md) | Packaging et mise à jour : sonde de santé réelle, rollback corrélé, déclenchement manuel | Acceptée |

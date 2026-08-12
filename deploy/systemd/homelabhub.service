@@ -1,0 +1,35 @@
+[Unit]
+Description=Homelab Hub
+Documentation=https://github.com/DiogoDeAlmeida/home-bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=homelabhub
+Group=homelabhub
+
+# /opt/homelabhub/current est un lien symbolique vers releases/<version> — deploy/install.sh et
+# deploy/update.sh le repointent, ce fichier ne change jamais d'une version à l'autre.
+WorkingDirectory=/opt/homelabhub/current
+ExecStart=/opt/homelabhub/current/homelabhub
+
+# Code de sortie 1 : migration refusée au démarrage (Program.cs, ADR-0007) — un binaire face à
+# un schéma incertain. Redémarrer a une chance de réussir seulement si la cause était
+# transitoire (ex. verrou SQLite pas encore relâché) ; StartLimitBurst borne les tentatives pour
+# qu'un échec systématique s'arrête net plutôt que de boucler indéfiniment en silence.
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+# Durcissement : ce processus détient les clés de tout le homelab (cadrage §3). Seuls les
+# répertoires de données et de configuration sont accessibles en écriture ; le reste du
+# système de fichiers reste en lecture seule à ses yeux.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/homelabhub/data /etc/homelabhub
+
+[Install]
+WantedBy=multi-user.target

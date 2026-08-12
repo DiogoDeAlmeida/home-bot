@@ -3,6 +3,7 @@ using HomelabHub.Abstractions.Platform;
 using HomelabHub.Core;
 using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
+using HomelabHub.Core.Modules;
 using HomelabHub.Discord;
 using HomelabHub.Host.Api;
 using HomelabHub.Host.Auth;
@@ -11,6 +12,7 @@ using HomelabHub.Infrastructure.Persistence;
 using HomelabHub.Modules.Media;
 using HomelabHub.Modules.SystemInfo;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 
 // ─────────────────────────────────────────────────────────────────────────────────────
 //  Homelab Hub — racine de composition.
@@ -156,8 +158,74 @@ var version = Assembly.GetExecutingAssembly()
     ?? "inconnue";
 
 // Sonde consommée par systemd et par le script de mise à jour, qui doit vérifier qu'un
-// redémarrage a réellement abouti avant de déclarer la migration réussie (ADR-0007).
-app.MapGet("/healthz", () => Results.Ok(new { status = "ok", version })).AllowAnonymous();
+// redémarrage a réellement abouti avant de déclarer la migration réussie ou de la faire
+// suivre d'un rollback (ADR-0007, ADR-0019).
+//
+// Avant cette sonde, /healthz ne vérifiait rien d'autre que « le processus répond aux requêtes
+// HTTP » — un hub dont la connexion Discord échouait en silence répondait quand même 200. Trois
+// vérifications réelles, chacune pouvant à elle seule faire échouer la sonde :
+//
+//  - base : lisible, et sans migration en attente — un schéma à moitié appliqué doit se voir ici,
+//    pas seulement au prochain redémarrage manqué ;
+//  - Discord : Connected ou NotConfigured comptent comme sains ; Connecting compte comme
+//    dégradé — un redémarrage tout juste terminé passe par cet état le temps de la poignée de
+//    main, d'où la fenêtre de tolérance côté script de mise à jour plutôt qu'ici ;
+//  - modules : le module système (aucune configuration requise) doit être actif — son
+//    inactivité ne peut venir que d'une régression du noyau de modules lui-même, jamais d'une clé
+//    d'API absente.
+app.MapGet("/healthz", async (
+    IDbContextFactory<HubDbContext> contexts,
+    IModuleRegistry moduleRegistry,
+    IDiscordConnectionStatus discordStatus,
+    CancellationToken cancellationToken) =>
+{
+    var healthy = true;
+    string database;
+
+    try
+    {
+        await using var context = await contexts.CreateDbContextAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var canConnect = await context.Database.CanConnectAsync(cancellationToken).ConfigureAwait(false);
+        var pending = await context.Database.GetPendingMigrationsAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        database = canConnect && !pending.Any() ? "ok" : "migration en attente";
+        healthy &= canConnect && !pending.Any();
+    }
+    catch (Exception ex)
+    {
+        database = $"injoignable : {ex.Message}";
+        healthy = false;
+    }
+
+    var discordHealthy = discordStatus.State
+        is DiscordConnectionState.Connected or DiscordConnectionState.NotConfigured;
+    healthy &= discordHealthy;
+    var discord = discordStatus.State switch
+    {
+        DiscordConnectionState.NotConfigured => "non configuré",
+        DiscordConnectionState.Connecting => "connexion en cours",
+        DiscordConnectionState.Connected => "connecté",
+        DiscordConnectionState.Failed => $"échec : {discordStatus.Detail}",
+        _ => "inconnu",
+    };
+
+    var systemModuleActive = moduleRegistry.IsActive("system");
+    healthy &= systemModuleActive;
+    var modules = systemModuleActive ? "ok" : "module système inactif";
+
+    var body = new
+    {
+        status = healthy ? "ok" : "unhealthy",
+        version,
+        checks = new { database, discord, modules },
+    };
+
+    return healthy
+        ? Results.Ok(body)
+        : Results.Json(body, statusCode: StatusCodes.Status503ServiceUnavailable);
+}).AllowAnonymous();
 
 app.MapSetupAndAuth();
 app.MapHub();

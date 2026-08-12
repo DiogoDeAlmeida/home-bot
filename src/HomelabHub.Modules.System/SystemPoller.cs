@@ -12,12 +12,17 @@ internal sealed class SystemPoller(
     IHubPlatform platform,
     IModuleState<SystemSnapshot> state,
     IModuleConfiguration<SystemModule> config,
-    IEventPublisher events) : IModulePoller
+    IEventPublisher events,
+    IGitHubReleaseClient releases) : IModulePoller
 {
     public async Task PollAsync(CancellationToken cancellationToken)
     {
         var volumes = ReadVolumes();
         var now = DateTimeOffset.UtcNow;
+        var previous = state.Current;
+
+        var (latestVersion, checkedAt) = await ResolveLatestVersionAsync(previous, now, cancellationToken)
+            .ConfigureAwait(false);
 
         state.Mutate(_ => new SystemSnapshot(
             platform.Version,
@@ -26,9 +31,89 @@ internal sealed class SystemPoller(
             volumes,
             now,
             config.GetInt32(SystemModule.WarnBelowPercentKey, 15),
-            config.GetInt32(SystemModule.CriticalBelowPercentKey, 7)));
+            config.GetInt32(SystemModule.CriticalBelowPercentKey, 7),
+            latestVersion,
+            checkedAt));
 
         await PublishDiskAnomaliesAsync(volumes, now, cancellationToken).ConfigureAwait(false);
+        await PublishUpdateAnomalyAsync(latestVersion, now, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// N'interroge GitHub que si l'intervalle configuré est écoulé — le poller lui-même tourne
+    /// bien plus souvent que ça ne devrait être nécessaire de vérifier (voir
+    /// <see cref="SystemModule.UpdateCheckIntervalHoursKey"/>). Entre deux vérifications, la
+    /// dernière valeur connue est conservée : un GitHub momentanément injoignable ne doit pas
+    /// faire disparaître un signal déjà vu.
+    /// </summary>
+    private async Task<(string? LatestVersion, DateTimeOffset? CheckedAt)> ResolveLatestVersionAsync(
+        SystemSnapshot previous, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var interval = config.GetDuration(SystemModule.UpdateCheckIntervalHoursKey, TimeSpan.FromHours(12));
+        var due = previous.UpdateCheckedAt is not { } lastChecked || now - lastChecked >= interval;
+
+        if (!due)
+        {
+            return (previous.LatestAvailableVersion, previous.UpdateCheckedAt);
+        }
+
+        var tag = await releases.GetLatestReleaseTagAsync(cancellationToken).ConfigureAwait(false);
+
+        // L'horodatage avance même en cas d'échec : sinon un dépôt injoignable ferait retenter
+        // à chaque cycle du poller (par défaut chaque minute) plutôt qu'à la cadence voulue.
+        return (tag ?? previous.LatestAvailableVersion, now);
+    }
+
+    /// <summary>
+    /// Republie « nouvelle version disponible » tant qu'elle l'est — un détecteur republie ce
+    /// qui va toujours, pas seulement ce qui vient de changer (ADR-0005). L'anomalie se referme
+    /// d'elle-même une fois le binaire mis à jour, sans action de ce poller.
+    /// </summary>
+    private async Task PublishUpdateAnomalyAsync(string? latestVersion, DateTimeOffset now,
+                                                  CancellationToken cancellationToken)
+    {
+        if (!IsNewer(latestVersion, platform.Version))
+        {
+            return;
+        }
+
+        await events.PublishAsync(new HubEvent(
+            ModuleKey: "system",
+            Type: "system.update.available",
+            // Un signalement, jamais une panne : Warning notifie une fois à l'ouverture puis se
+            // tait jusqu'à la mise à jour manuelle ou la résolution (ADR-0005), sans jamais
+            // rien déclencher lui-même.
+            Severity: HubEventSeverity.Warning,
+            Title: $"Nouvelle version disponible : {latestVersion}",
+            Body: $"Version installée : {platform.Version}. La mise à jour reste manuelle — " +
+                  $"voir docs/03-deploiement.md.",
+            DedupeKey: "system.update.available",
+            Data: new Dictionary<string, string>
+            {
+                ["current"] = platform.Version,
+                ["latest"] = latestVersion!,
+            },
+            OccurredAt: now), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Compare deux étiquettes semver, préfixe <c>v</c> optionnel. Silencieux par défaut : une
+    /// étiquette illisible ne doit jamais déclencher une fausse alerte.
+    /// </summary>
+    private static bool IsNewer(string? latestTag, string currentVersion)
+    {
+        if (string.IsNullOrWhiteSpace(latestTag))
+        {
+            return false;
+        }
+
+        var latestText = latestTag.StartsWith('v') || latestTag.StartsWith('V')
+            ? latestTag[1..]
+            : latestTag;
+
+        return Version.TryParse(latestText, out var latest)
+               && Version.TryParse(currentVersion, out var current)
+               && latest > current;
     }
 
     /// <summary>

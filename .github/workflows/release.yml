@@ -1,0 +1,77 @@
+name: Release
+
+# Un tag vX.Y.Z construit et publie une archive de release. La création du tag reste un geste
+# manuel (git tag && git push --tags) : aucune publication automatique sur un simple push vers
+# main, dans le même esprit que la mise à jour elle-même reste manuelle sur le LXC
+# (docs/03-deploiement.md, ADR-0019).
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publication self-contained linux-x64
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "npm"
+          cache-dependency-path: "web-ui/package-lock.json"
+
+      - name: Restauration
+        run: dotnet restore
+
+      # La CI (ci.yml) a déjà vérifié que le build et les tests passent sur ce commit avant que
+      # le tag n'y soit posé — cette étape ne rejoue pas les tests, elle publie.
+      - name: Version depuis le tag
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      # Self-contained, single-file, ReadyToRun, linux-x64 : les options figées par ADR-0001.
+      # Pas de PublishTrimmed ni PublishAot — EF Core, Discord.Net et Serilog reposent sur la
+      # réflexion. wwwroot n'est pas embarqué dans l'exécutable : il reste servi depuis le
+      # disque, donc présent à côté du binaire dans l'archive.
+      - name: Publication
+        run: >
+          dotnet publish src/HomelabHub.Host/HomelabHub.Host.csproj
+          -c Release
+          -r linux-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishReadyToRun=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      # Nom d'archive et disposition (homelabhub + wwwroot/ + appsettings*.json à la racine)
+      # attendus tels quels par deploy/install.sh et deploy/update.sh.
+      - name: Archivage
+        working-directory: publish
+        run: |
+          archive="homelabhub-linux-x64-${{ steps.version.outputs.tag }}.tar.gz"
+          tar czf "../${archive}" .
+          cd ..
+          sha256sum "${archive}" > "${archive}.sha256"
+
+      - name: Publication de la release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            homelabhub-linux-x64-${{ steps.version.outputs.tag }}.tar.gz
+            homelabhub-linux-x64-${{ steps.version.outputs.tag }}.tar.gz.sha256

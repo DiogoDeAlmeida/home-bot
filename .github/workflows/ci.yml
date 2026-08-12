@@ -47,6 +47,3 @@ jobs:
       # noyau, la CI casse. C'est le seul moyen de faire tenir une frontière dans le temps.
       - name: Tests
         run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
-
-# À venir :
-#   étape 6 — release.yml : publication self-contained linux-x64 en asset de release

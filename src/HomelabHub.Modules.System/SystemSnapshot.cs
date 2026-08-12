@@ -19,6 +19,12 @@ namespace HomelabHub.Modules.SystemInfo;
 /// déclenche une anomalie tout en s'affichant en vert.
 /// </param>
 /// <param name="CriticalBelowPercent">Seuil critique configuré.</param>
+/// <param name="LatestAvailableVersion">
+/// Dernière version publiée sur GitHub connue du hub, ou <c>null</c> tant qu'aucune vérification
+/// n'a abouti. Mise à jour au rythme de <see cref="SystemModule.UpdateCheckIntervalHoursKey"/>,
+/// pas à chaque cycle du poller — l'API GitHub non authentifiée limite à 60 requêtes par heure.
+/// </param>
+/// <param name="UpdateCheckedAt">Instant de la dernière vérification GitHub ayant abouti.</param>
 public sealed record SystemSnapshot(
     string Version,
     DateTimeOffset StartedAt,
@@ -26,7 +32,9 @@ public sealed record SystemSnapshot(
     IReadOnlyList<VolumeUsage> Volumes,
     DateTimeOffset? ObservedAt,
     int WarnBelowPercent = 15,
-    int CriticalBelowPercent = 7)
+    int CriticalBelowPercent = 7,
+    string? LatestAvailableVersion = null,
+    DateTimeOffset? UpdateCheckedAt = null)
 {
     /// <summary>
     /// État initial, affichable avant le premier cycle : le dashboard peut le lire dès la

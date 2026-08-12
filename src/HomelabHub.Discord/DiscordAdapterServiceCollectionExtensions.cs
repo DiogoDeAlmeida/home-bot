@@ -23,6 +23,7 @@ public static class DiscordAdapterServiceCollectionExtensions
         services.AddSingleton<DiscordGatewayService>();
         services.AddHostedService(sp => sp.GetRequiredService<DiscordGatewayService>());
         services.AddSingleton<IAnomalyNotifier>(sp => sp.GetRequiredService<DiscordGatewayService>());
+        services.AddSingleton<IDiscordConnectionStatus>(sp => sp.GetRequiredService<DiscordGatewayService>());
 
         return services;
     }

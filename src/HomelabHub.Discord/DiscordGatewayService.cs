@@ -51,7 +51,7 @@ internal sealed class DiscordGatewayService(
     ModuleCatalog catalog,
     IModuleRegistry modules,
     IServiceProvider services,
-    ILogger<DiscordGatewayService> logger) : BackgroundService, IAnomalyNotifier
+    ILogger<DiscordGatewayService> logger) : BackgroundService, IAnomalyNotifier, IDiscordConnectionStatus
 {
     /// <summary>
     /// Cadence du tableau de bord, alignée sur l'intervalle par défaut du poller média : pas de
@@ -61,6 +61,10 @@ internal sealed class DiscordGatewayService(
 
     private DiscordSocketClient? _client;
     private DiscordCommandPlan _plan = new([], new Dictionary<string, string>());
+
+    public DiscordConnectionState State { get; private set; } = DiscordConnectionState.NotConfigured;
+
+    public string? Detail { get; private set; }
 
     /// <summary>
     /// Message Discord de chaque anomalie active, par clé de déduplication.
@@ -94,9 +98,12 @@ internal sealed class DiscordGatewayService(
             GatewayIntents = GatewayIntents.Guilds,
         });
         _client = client;
+        State = DiscordConnectionState.Connecting;
+        Detail = null;
 
         client.Log += OnDiscordLog;
         client.Ready += () => OnReadyAsync(client, guild);
+        client.Disconnected += OnDisconnectedAsync;
         client.SlashCommandExecuted += OnSlashCommandAsync;
         client.ButtonExecuted += OnButtonAsync;
 
@@ -122,6 +129,8 @@ internal sealed class DiscordGatewayService(
         }
         catch (Exception ex)
         {
+            State = DiscordConnectionState.Failed;
+            Detail = ex.Message;
             logger.LogError(ex, "Connexion à Discord impossible.");
         }
         finally
@@ -131,11 +140,26 @@ internal sealed class DiscordGatewayService(
         }
     }
 
+    /// <remarks>
+    /// Discord.Net retente seul la reconnexion : on ne marque pas <c>Failed</c> ici, seulement
+    /// « en cours », pour ne pas déclarer une panne sur une coupure réseau que le client va
+    /// résoudre de lui-même dans la seconde. <c>Ready</c>, plus loin, ramène l'état à
+    /// <c>Connected</c> une fois la reconnexion aboutie.
+    /// </remarks>
+    private Task OnDisconnectedAsync(Exception ex)
+    {
+        State = DiscordConnectionState.Connecting;
+        Detail = $"Déconnecté, reconnexion en cours : {ex.Message}";
+        return Task.CompletedTask;
+    }
+
     private async Task OnReadyAsync(DiscordSocketClient client, ulong guildId)
     {
         var guild = client.GetGuild(guildId);
         if (guild is null)
         {
+            State = DiscordConnectionState.Failed;
+            Detail = $"Serveur {guildId} introuvable — le bot y est-il invité ?";
             logger.LogError(
                 "Serveur Discord {GuildId} introuvable — le bot y est-il invité ?", guildId);
             return;
@@ -152,9 +176,14 @@ internal sealed class DiscordGatewayService(
             await guild.BulkOverwriteApplicationCommandAsync([.. _plan.Commands]).ConfigureAwait(false);
             logger.LogInformation("{Count} commande(s) enregistrée(s) sur le serveur {GuildId}.",
                 _plan.Commands.Count, guildId);
+
+            State = DiscordConnectionState.Connected;
+            Detail = null;
         }
         catch (Exception ex)
         {
+            State = DiscordConnectionState.Failed;
+            Detail = $"Enregistrement des commandes impossible : {ex.Message}";
             logger.LogError(ex, "Enregistrement des commandes Discord impossible.");
         }
     }

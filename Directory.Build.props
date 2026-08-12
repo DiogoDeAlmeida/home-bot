@@ -37,7 +37,7 @@
     <Product>Homelab Hub</Product>
     <Authors>diogo</Authors>
     <VersionPrefix>0.1.0</VersionPrefix>
-    <RepositoryUrl>https://github.com/diogo/homelab-hub</RepositoryUrl>
+    <RepositoryUrl>https://github.com/DiogoDeAlmeida/home-bot</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
