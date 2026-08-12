@@ -30,6 +30,13 @@ public static class HubInfrastructureServiceCollectionExtensions
         services.AddSingleton(platform);
         services.AddSingleton<IHubPlatform>(platform);
 
+        // Avant tout le reste : une deuxième instance qui continuerait au-delà de cette ligne
+        // écrirait le keyring, la configuration et la base en concurrence avec la première, sans
+        // qu'aucune des deux ne le sache. Trouvé en production — voir SingleInstanceLock.
+        // L'exception se propage jusqu'à Program.cs, qui refuse de démarrer avec un message
+        // explicite plutôt que de laisser passer un échec silencieux.
+        services.AddSingleton(SingleInstanceLock.Acquire(platform.DataDirectory));
+
         // Le keyring vit dans le répertoire de données, donc dans l'archive de sauvegarde.
         // Sur Linux il n'y a pas de DPAPI : ce sont des fichiers XML en clair, protégés par
         // les permissions du système de fichiers et rien d'autre (ADR-0007).

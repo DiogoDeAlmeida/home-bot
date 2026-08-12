@@ -135,12 +135,18 @@ envoie un `Referer` correct — les protections CSRF sont supposées aux valeurs
 | Étape | Contenu | État |
 |---|---|---|
 | **0** | Squelette, contrats, CI, ADR | **fait** |
-| **1** | Socle : journalisation, SQLite, configuration chiffrée, registre de modules, verrou de premier démarrage, authentification, sauvegarde, **module `system`** comme banc de test, front minimal | à venir |
-| **2** | Module média : clients, corrélation, snapshot, REST + SignalR | |
-| **3** | Dashboard Discord : message persistant, boutons, slash commands | |
-| **4** | Notifications : détecteurs, anomalies, journal consultable | |
-| **5** | Packaging : publication self-contained, GitHub Actions, scripts LXC, mise à jour | |
+| **1** | Socle : journalisation, SQLite, configuration chiffrée, registre de modules, authentification, sauvegarde, **module `system`** comme banc de test, front minimal | **fait** |
+| **2** | Module média : clients, corrélation, snapshot, REST + SignalR | **fait** |
+| **3** | Dashboard Discord : message persistant, boutons, slash commands | **fait, vérifié en conditions réelles** (ADR-0008) |
+| **4** | Notifications : détecteurs, anomalies, journal consultable | **fait** |
+| **5** | Packaging : publication self-contained, GitHub Actions, scripts LXC, mise à jour | à venir |
 | **6+** | Module Home Assistant, module Proxmox, absorption de Doplarr | |
+
+Le verrou de premier démarrage, prévu à l'étape 1, a en réalité été livré à l'étape 3
+([ADR-0018](adr/0018-verrou-de-premiere-instance.md)) — un incident en conditions réelles
+(message Discord dédoublé par deux instances du hub tournant sur le même répertoire) l'a fait
+remonter en priorité plutôt que de rester une case cochée trop tôt sur la foi d'une bonne
+intention.
 
 L'abstraction de modules est fusionnée dans l'étape 1 plutôt que traitée séparément : écrire le
 socle avant de poser le contrat, c'est concevoir en aveugle. Le module `system` — réel, trivial,
@@ -162,12 +168,16 @@ Chaque étape doit laisser le projet déployable et utilisable.
 
 | Manquant | Bloque | Échéance |
 |---|---|---|
-| **Clés d'API Radarr, Sonarr et Seerr** | étape 2 | **maintenant** — sans elles, pas de capture de payloads réels |
-| Jeton Discord (application distincte de Doplarr) + ID du salon dashboard | étape 3 | avant l'adaptateur |
+| **Clés d'API Radarr, Sonarr et Seerr** | étape 2 | **fourni** — capturé et anonymisé |
+| Jeton Discord, serveur, salon dashboard, rôle hub-admin | étape 3 | **fourni** — adaptateur câblé, voir ci-dessous |
 | IP + jeton longue durée Home Assistant | étape 6+ | non pressé |
 | Champs Username/Password du webhook Radarr | rien | second facteur optionnel |
 
 La machine de développement est sur le LAN (`192.168.1.17`) et joint les quatre services : les
 fixtures de test seront capturées sur les instances réelles, puis anonymisées.
 
-Guild Discord : `1328010940041400370`.
+Guild Discord : `905758180364128256`. Le premier identifiant noté ici
+(`1328010940041400370`) était erroné — l'application du bot n'y a jamais été invitée, ce qui a
+coûté deux allers-retours d'invitation avant que l'erreur ne soit débusquée par un appel REST
+direct (`GET /users/@me/guilds`) plutôt que par une supposition. Salon du tableau de bord :
+`1537098548254998588`. Rôle `hub-admin` : `1537098626076254258`.

@@ -32,7 +32,19 @@ builder.Logging.SetMinimumLevel(LogLevel.Trace);
 builder.Logging.AddFilter(logLevel.IsEnabled);
 builder.Services.AddSingleton(logLevel);
 
-builder.Services.AddHubInfrastructure(builder.Configuration);
+// Le verrou de première instance (SingleInstanceLock) est pris dès la première ligne de cet
+// appel, avant tout accès au keyring, à la configuration ou à la base. La journalisation
+// structurée n'existe pas encore à ce stade — Build() n'a pas eu lieu — d'où stderr brut plutôt
+// que ILogger : systemd capture l'un comme l'autre.
+try
+{
+    builder.Services.AddHubInfrastructure(builder.Configuration);
+}
+catch (SingleInstanceLockException ex)
+{
+    await Console.Error.WriteLineAsync(ex.Message);
+    return 1;
+}
 
 // Tous les modules sont enregistrés, activés ou non : le conteneur est immuable après
 // Build(), l'activation est un état runtime (ADR-0002). Le module média est déclaré avant

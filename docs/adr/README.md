@@ -25,3 +25,4 @@ Une décision ne se modifie pas : elle se remplace par une nouvelle qui la super
 | [0015](0015-mediajourney-etat-derive.md) | `MediaJourney` est un état dérivé, jamais possédé | Acceptée |
 | [0016](0016-extensibilite-des-adaptateurs.md) | Extensibilité des adaptateurs : corrigé, et dette assumée | Acceptée |
 | [0017](0017-la-table-danomalies-est-le-premier-etat-possede.md) | La table d'anomalies est le premier état réellement possédé | Acceptée |
+| [0018](0018-verrou-de-premiere-instance.md) | Un verrou de première instance, pas un fichier PID | Acceptée |
