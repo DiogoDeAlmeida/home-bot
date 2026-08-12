@@ -381,10 +381,11 @@ internal sealed class DiscordGatewayService(
             }
 
             var privateReply = registered?.Descriptor.Command?.PrivateReply ?? false;
+            var title = registered?.Descriptor.DisplayName ?? capabilityKey;
             var result = await RunAsync(capabilityKey, arguments, InvocationSource.ChatCommand, command.User)
                 .ConfigureAwait(false);
 
-            await command.RespondAsync(Render(result), ephemeral: privateReply || IsFailure(result))
+            await command.RespondAsync(Render(result, title), ephemeral: privateReply || IsFailure(result))
                          .ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -451,13 +452,14 @@ internal sealed class DiscordGatewayService(
 
             var registered = capabilities.Find(action.CapabilityKey);
             var privateReply = registered?.Descriptor.Command?.PrivateReply ?? false;
+            var title = registered?.Descriptor.DisplayName ?? action.CapabilityKey;
 
             var result = await RunAsync(action.CapabilityKey, action.Arguments,
                 InvocationSource.ChatButton, component.User).ConfigureAwait(false);
 
             await component.UpdateAsync(props =>
             {
-                props.Content = Render(result);
+                props.Content = Render(result, title);
                 props.Components = new ComponentBuilder().Build();
             }).ConfigureAwait(false);
 
@@ -467,7 +469,7 @@ internal sealed class DiscordGatewayService(
             // l'aurait été.
             if (!privateReply && !IsFailure(result))
             {
-                await component.Channel.SendMessageAsync(Render(result)).ConfigureAwait(false);
+                await component.Channel.SendMessageAsync(Render(result, title)).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
@@ -508,7 +510,7 @@ internal sealed class DiscordGatewayService(
             await RefreshAnomalyMessageAsync(dedupeKey).ConfigureAwait(false);
         }
 
-        await component.RespondAsync(Render(result), ephemeral: true).ConfigureAwait(false);
+        await component.RespondAsync(Render(result, "Anomalie"), ephemeral: true).ConfigureAwait(false);
     }
 
     private async Task RefreshAnomalyMessageAsync(string dedupeKey)
@@ -561,8 +563,33 @@ internal sealed class DiscordGatewayService(
 
     private static bool IsFailure(CapabilityResult result) => result.Outcome == CapabilityOutcome.Failed;
 
-    private static string Render(CapabilityResult result) =>
-        result.Message ?? (result.Outcome == CapabilityOutcome.Ok ? "Fait." : "Opération transmise.");
+    /// <summary>
+    /// Rend la réponse d'une capacité pour Discord.
+    /// </summary>
+    /// <remarks>
+    /// <b>Le bug corrigé ici</b> : une <c>Query</c> comme <c>media.queue</c> ou
+    /// <c>system.status</c> ne pose jamais de <c>Message</c>, seulement un <c>Payload</c>
+    /// (voir leurs capacités respectives) — la distinction Query/Mutation gouverne déjà
+    /// l'autorisation (ADR-0004), mais ce rendu l'ignorait complètement et retombait sur
+    /// « Fait. » à chaque fois, rendant toute lecture depuis Discord muette. Découvert en
+    /// conditions réelles : <c>/system status</c> et <c>/media queue</c> ne répondaient rien
+    /// d'exploitable. <paramref name="title"/> sert d'en-tête si le rendu retombe sur le repli
+    /// générique clé/valeur (<see cref="DiscordWidgetRenderer.RenderPayload"/>).
+    /// </remarks>
+    internal static string Render(CapabilityResult result, string title)
+    {
+        if (!string.IsNullOrWhiteSpace(result.Message))
+        {
+            return result.Message;
+        }
+
+        if (result.Payload is not null)
+        {
+            return DiscordWidgetRenderer.RenderPayload(result.Payload, title);
+        }
+
+        return result.Outcome == CapabilityOutcome.Ok ? "Fait." : "Opération transmise.";
+    }
 
     [SuppressMessage("Design", "CA1031:Do not catch general exception types",
         Justification = "Le journal Discord.Net ne doit jamais interrompre la passerelle.")]

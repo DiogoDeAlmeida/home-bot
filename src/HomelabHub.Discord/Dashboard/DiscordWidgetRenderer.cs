@@ -24,12 +24,31 @@ internal static class DiscordWidgetRenderer
     {
         ArgumentNullException.ThrowIfNull(payload);
 
-        return payload.Data switch
-        {
-            MediaOverview overview => RenderMediaOverview(overview),
-            _ => RenderGeneric(payload),
-        };
+        return RenderValue(payload.Data, payload.WidgetKey);
     }
+
+    /// <summary>
+    /// Rend le contenu d'un résultat de capacité <c>Query</c> pour une réponse Discord.
+    /// </summary>
+    /// <remarks>
+    /// Même dispatch que pour un widget — <see cref="MediaOverview"/> dédié, repli générique
+    /// sinon — mais sans passer par <see cref="WidgetPayload"/> : une réponse de capacité n'a ni
+    /// clé de widget ni horodatage, seulement une charge utile à montrer. <paramref name="title"/>
+    /// tient lieu d'en-tête, à défaut du <c>WidgetKey</c> qu'un widget porterait.
+    /// </remarks>
+    public static string RenderPayload(object payload, string title)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+
+        return RenderValue(payload, title);
+    }
+
+    private static string RenderValue(object? data, string title) => data switch
+    {
+        MediaOverview overview => RenderMediaOverview(overview),
+        _ => RenderGeneric(data, title),
+    };
 
     private static string RenderMediaOverview(MediaOverview overview)
     {
@@ -98,11 +117,11 @@ internal static class DiscordWidgetRenderer
     /// scalaire de la donnée devient une ligne. Un objet ou une liste imbriquée est résumé par
     /// son nombre d'éléments plutôt que déplié — le repli n'a pas vocation à tout montrer, ADR-0006.
     /// </summary>
-    private static string RenderGeneric(WidgetPayload payload)
+    private static string RenderGeneric(object? data, string title)
     {
-        var builder = new StringBuilder().Append("**").Append(payload.WidgetKey).Append("**\n");
+        var builder = new StringBuilder().Append("**").Append(title).Append("**\n");
 
-        using var document = JsonDocument.Parse(JsonSerializer.Serialize(payload.Data));
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(data));
 
         if (document.RootElement.ValueKind == JsonValueKind.Object)
         {
