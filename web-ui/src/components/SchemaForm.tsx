@@ -29,12 +29,19 @@ import type { ConfigField, ConfigSurface } from '@/api/types'
  * écrites à la main : `Select`, `MultiSelect` et `TagsInput` demandent une navigation clavier et
  * une gestion du focus qu'on n'a aucune raison de réimplémenter.
  *
- * Deux règles gouvernent la soumission :
+ * Trois règles gouvernent la soumission :
  *
  * 1. **Seuls les champs modifiés partent.** Un secret est renvoyé masqué par l'API ; le
  *    réémettre tel quel écraserait la vraie valeur par des points de suspension. Le serveur s'en
  *    protège aussi, mais un client qui envoie ce qu'il ne devrait pas est un bug à part entière.
  * 2. **Un champ vidé part explicitement à `null`**, ce qui supprime la clé côté serveur.
+ * 3. **Un secret revenu vide n'est pas « vidé », il est « pas touché ».** Rien dans ce
+ *    formulaire ne permet de vider un secret délibérément — le champ démarre toujours vide, un
+ *    masque en tient lieu d'indice. Sans cette règle, une frappe suivie d'un retour arrière dans
+ *    le champ suffirait à le marquer modifié et à effacer la vraie valeur au prochain
+ *    enregistrement — y compris un enregistrement qui ne visait qu'un tout autre champ. Le
+ *    serveur applique la même règle de son côté ; elle est dupliquée ici pour que le compteur
+ *    « champs modifiés » reste honnête.
  */
 export function SchemaForm({
   surface,
@@ -61,6 +68,11 @@ export function SchemaForm({
   const [values, setValues] = useState<Record<string, string>>(initial)
   const [dirty, setDirty] = useState<Set<string>>(new Set())
 
+  const fieldsByKey = useMemo(
+    () => new Map(surface.fields.map((field) => [field.key, field])),
+    [surface],
+  )
+
   const update = (key: string, value: string) => {
     setValues((current) => ({ ...current, [key]: value }))
     setDirty((current) => new Set(current).add(key))
@@ -81,6 +93,11 @@ export function SchemaForm({
     const payload: Record<string, string | null> = {}
     for (const key of dirty) {
       const value = values[key]?.trim() ?? ''
+
+      // Règle 3 : un secret revenu vide n'est pas une intention d'effacement, on ne l'envoie
+      // même pas — ni sa valeur, ni un `null` qui le supprimerait côté serveur.
+      if (value === '' && fieldsByKey.get(key)?.secret) continue
+
       payload[key] = value === '' ? null : value
     }
     onSave(payload)

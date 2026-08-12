@@ -58,9 +58,23 @@ internal static class ConfigSurface
                 continue;
             }
 
-            // Un secret réaffiché masqué puis renvoyé tel quel ne doit pas écraser la vraie
-            // valeur : c'est le piège classique du formulaire en écriture seule.
-            if (declared.Secret && value is { Length: > 0 } && value.All(c => c == MaskCharacter))
+            // Un secret n'est jamais effacé par une valeur vide ou masquée : l'interface ne
+            // propose aujourd'hui aucun moyen de vider délibérément un secret, un champ qui
+            // revient vide n'est donc jamais une intention d'effacement, seulement une
+            // interaction sans suite — une frappe suivie d'un retour arrière, par exemple. Le
+            // traiter comme « inchangé » plutôt que « à effacer » est sans perte de capacité
+            // réelle, et évite qu'un tel geste ne supprime silencieusement la vraie valeur à
+            // l'enregistrement suivant.
+            //
+            // « Masqué » se vérifie par égalité avec ce que l'API afficherait réellement, pas
+            // par une forme supposée : pour un secret de plus de quatre caractères, le masque
+            // garde les quatre derniers en clair (cf. ReadForDisplay) et n'est donc PAS
+            // entièrement composé du caractère de masque. Un contrôle qui l'aurait supposé —
+            // « value.All(c => c == MaskCharacter) » — aurait laissé passer le réaffichage du
+            // masque comme une vraie valeur pour tout secret non trivial, et l'aurait écrit en
+            // clair à la place du secret. Comparer à la valeur réellement affichée est la seule
+            // façon de ne pas dépendre d'une hypothèse sur sa forme.
+            if (declared.Secret && IsUnchanged(value, ReadForDisplay(store, prefix, declared)))
             {
                 continue;
             }
@@ -76,6 +90,13 @@ internal static class ConfigSurface
         await store.SetManyAsync(writes, cancellationToken).ConfigureAwait(false);
         return Results.NoContent();
     }
+
+    /// <summary>
+    /// Un secret absent, vide, ou identique à ce que l'API a affiché : trois formes de la même
+    /// chose, « rien de nouveau à écrire ».
+    /// </summary>
+    private static bool IsUnchanged(string? submitted, string? displayed) =>
+        string.IsNullOrEmpty(submitted) || string.Equals(submitted, displayed, StringComparison.Ordinal);
 
     /// <summary>Un secret ne repart jamais en clair de l'API : écriture seule, lecture masquée.</summary>
     private static string? ReadForDisplay(IHubConfigStore store, string prefix, ConfigField declared)

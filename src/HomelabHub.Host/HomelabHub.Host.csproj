@@ -5,6 +5,10 @@
     <AssemblyName>homelabhub</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="HomelabHub.Host.Tests" />
+  </ItemGroup>
+
   <!-- Racine de composition : le seul projet exécutable, et le seul endroit qui connaisse
        à la fois l'adaptateur Discord et l'API web. Le bot tourne comme service d'arrière-plan
        dans ce processus : un binaire, une unité systemd, un packaging LXC simple. -->
