@@ -3,6 +3,7 @@ using HomelabHub.Abstractions.Platform;
 using HomelabHub.Core;
 using HomelabHub.Core.Backup;
 using HomelabHub.Core.Configuration;
+using HomelabHub.Discord;
 using HomelabHub.Host.Api;
 using HomelabHub.Host.Auth;
 using HomelabHub.Infrastructure;
@@ -38,6 +39,7 @@ builder.Services.AddHubInfrastructure(builder.Configuration);
 // d'être fonctionnel : il expose son schéma, donc son formulaire, et se signale lui-même
 // comme inactif tant que ses clés d'API ne sont pas saisies.
 builder.Services.AddHubCore(new SystemModule(), new MediaModule());
+builder.Services.AddDiscordAdapter();
 
 builder.Services.AddSingleton<AdminAccount>();
 

@@ -21,6 +21,17 @@ public static class HubSettings
     public const string LogLevelKey = "hub.logging.level";
     public const string JournalRetentionDaysKey = "hub.journal.retentionDays";
     public const string JournalMaximumRowsKey = "hub.journal.maxRows";
+    public const string DiscordTokenKey = "hub.discord.token";
+    public const string DiscordGuildIdKey = "hub.discord.guildId";
+    public const string DiscordDashboardChannelIdKey = "hub.discord.dashboardChannelId";
+    public const string DiscordAdminRoleIdKey = "hub.discord.adminRoleId";
+
+    /// <summary>
+    /// Identifiant du message de tableau de bord, réutilisé pour l'éditer en place plutôt que
+    /// d'en reposter un à chaque cycle. Non exposé au schéma : c'est un état écrit par
+    /// l'adaptateur, pas un réglage saisi par l'exploitant.
+    /// </summary>
+    public const string DiscordDashboardMessageIdKey = "hub.discord.dashboardMessageId";
 
     /// <summary>
     /// Les clés du schéma sont relatives — <c>backup.retention</c> — et préfixées par
@@ -46,7 +57,15 @@ public static class HubSettings
         .AddInt("journal.retentionDays", "Rétention du journal (jours)", defaultValue: 14,
                 help: "Les événements plus anciens sont supprimés par la purge quotidienne.")
         .AddInt("journal.maxRows", "Lignes de journal conservées", defaultValue: 100_000,
-                help: "Seconde borne : la première des deux limites atteinte l'emporte.");
+                help: "Seconde borne : la première des deux limites atteinte l'emporte.")
+        .AddSecret("discord.token", "Jeton du bot Discord", required: false,
+                   help: "Application dédiée au hub, distincte de Doplarr. Absent : l'adaptateur reste éteint.")
+        .AddText("discord.guildId", "ID du serveur Discord", required: false,
+                 help: "Les commandes sont enregistrées en guild, pour un effet immédiat.")
+        .AddText("discord.dashboardChannelId", "ID du salon du tableau de bord", required: false,
+                 help: "Le message y est édité en place, jamais reposté.")
+        .AddText("discord.adminRoleId", "ID du rôle hub-admin", required: false,
+                 help: "Seul ce rôle peut déclencher une mutation depuis Discord (ADR-0004).");
 }
 
 /// <summary>

@@ -9,4 +9,12 @@
     <ProjectReference Include="..\HomelabHub.Core\HomelabHub.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.WebSocket" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HomelabHub.Discord.Tests" />
+  </ItemGroup>
+
 </Project>
