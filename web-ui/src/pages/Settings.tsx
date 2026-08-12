@@ -55,18 +55,21 @@ export function SettingsPage() {
           )}
         </Card>
 
+        <ServiceCard />
         <BackupsCard />
       </Stack>
     </>
   )
 }
 
-function BackupsCard() {
-  const backups = useBackups()
-  const capabilities = useCapabilities()
+/**
+ * Lance une capacité en respectant sa confirmation, avec les mêmes notifications de résultat
+ * partout où une capacité se déclenche depuis cette page — la mise en sommeil d'une anomalie
+ * réutilise déjà ce chemin côté Discord (RequireConfirmation est une propriété de l'opération,
+ * pas du canal, ADR-0016).
+ */
+function useCapabilityLauncher() {
   const run = useRunCapability()
-
-  const createBackup = capabilities.data?.find((c) => c.key === 'system.backup.create')
 
   const launch = (capability: CapabilitySummary) => {
     const execute = () =>
@@ -88,8 +91,6 @@ function BackupsCard() {
         },
       )
 
-    // RequireConfirmation est désormais porté par la capacité, pas par le canal (ADR-0016) :
-    // l'interface web demande donc la même confirmation qu'un bouton dans un salon.
     if (!capability.requireConfirmation) {
       execute()
       return
@@ -103,6 +104,48 @@ function BackupsCard() {
     })
   }
 
+  return { launch, isPending: run.isPending }
+}
+
+/**
+ * hub.service.restart — utile en soi, et c'est le seul moyen d'appliquer un changement de
+ * configuration Discord (jeton, serveur, salon, rôle) : elle n'est lue qu'au démarrage, jamais
+ * rechargée à chaud, contrairement au reste de ce formulaire.
+ */
+function ServiceCard() {
+  const capabilities = useCapabilities()
+  const { launch, isPending } = useCapabilityLauncher()
+
+  const restart = capabilities.data?.find((c) => c.key === 'hub.service.restart')
+  if (!restart) {
+    return null
+  }
+
+  return (
+    <Card>
+      <Group justify="space-between" align="center" wrap="wrap" gap="md">
+        <Stack gap={4} style={{ flex: 1, minWidth: 260 }}>
+          <Text fw={500}>Service</Text>
+          <Text size="sm" c="dimmed">
+            Nécessaire après un changement de configuration Discord ci-dessus — jeton, serveur,
+            salon ou rôle ne sont lus qu'au démarrage.
+          </Text>
+        </Stack>
+        <Button onClick={() => launch(restart)} loading={isPending} color="orange">
+          Redémarrer le service
+        </Button>
+      </Group>
+    </Card>
+  )
+}
+
+function BackupsCard() {
+  const backups = useBackups()
+  const capabilities = useCapabilities()
+  const { launch, isPending } = useCapabilityLauncher()
+
+  const createBackup = capabilities.data?.find((c) => c.key === 'system.backup.create')
+
   return (
     <Card>
       <Group justify="space-between" align="flex-start" wrap="wrap" gap="md" mb="md">
@@ -114,7 +157,7 @@ function BackupsCard() {
           </Text>
         </Stack>
         {createBackup && (
-          <Button onClick={() => launch(createBackup)} loading={run.isPending}>
+          <Button onClick={() => launch(createBackup)} loading={isPending}>
             Sauvegarder maintenant
           </Button>
         )}

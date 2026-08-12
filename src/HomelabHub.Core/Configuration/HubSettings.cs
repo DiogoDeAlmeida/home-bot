@@ -63,13 +63,20 @@ public static class HubSettings
                 help: "Relu à chaque passage : réduire cette valeur prend effet sans redémarrage, "
                       + "utile pour vérifier la purge sans attendre 24 h.")
         .AddSecret("discord.token", "Jeton du bot Discord", required: false,
-                   help: "Application dédiée au hub, distincte de Doplarr. Absent : l'adaptateur reste éteint.")
+                   help: "Application dédiée au hub, distincte de Doplarr. Absent : l'adaptateur reste "
+                         + "éteint. Lu une seule fois au démarrage — après enregistrement, utiliser "
+                         + "« Redémarrer le service » ci-dessous pour l'appliquer.")
         .AddText("discord.guildId", "ID du serveur Discord", required: false,
-                 help: "Les commandes sont enregistrées en guild, pour un effet immédiat.")
+                 help: "Les commandes sont enregistrées en guild, pour un effet immédiat après un "
+                       + "redémarrage — ce réglage n'est lu qu'au démarrage, comme le reste de la "
+                       + "configuration Discord.")
         .AddText("discord.dashboardChannelId", "ID du salon du tableau de bord", required: false,
-                 help: "Le message y est édité en place, jamais reposté.")
+                 help: "Le message y est édité en place, jamais reposté. Redémarrage requis après "
+                       + "modification, comme le reste de la configuration Discord.")
         .AddText("discord.adminRoleId", "ID du rôle hub-admin", required: false,
-                 help: "Seul ce rôle peut déclencher une mutation depuis Discord (ADR-0004).");
+                 help: "Seul ce rôle peut déclencher une mutation depuis Discord (ADR-0004). "
+                       + "Redémarrage requis après modification, comme le reste de la configuration "
+                       + "Discord.");
 }
 
 /// <summary>

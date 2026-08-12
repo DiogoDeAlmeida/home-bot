@@ -152,6 +152,14 @@ if [[ -n "$missing" ]]; then
 fi
 msg_ok "Archive ${TARGET_TAG} téléchargée, vérifiée, en place."
 
+# L'unité systemd est rafraîchie ici, avant l'arrêt — pas seulement à l'installation initiale.
+# Une version qui compte sur une directive nouvelle (PrivateTmp=true en a été un exemple réel,
+# ADR-0019) doit la trouver déjà en place au moment où elle démarre, pas après. daemon-reload est
+# sans effet si le fichier n'a pas changé.
+curl -fsSL -o /etc/systemd/system/homelabhub.service \
+  "https://raw.githubusercontent.com/${REPO}/${TARGET_TAG}/deploy/systemd/homelabhub.service"
+systemctl daemon-reload
+
 # ── Sauvegarde corrélée à cette tentative précise, avant tout arrêt de service ─────────
 TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
 BACKUP_FILE="${BACKUPS_DIR}/pre-update-${CURRENT_TAG}-to-${TARGET_TAG}-${TIMESTAMP}.db"

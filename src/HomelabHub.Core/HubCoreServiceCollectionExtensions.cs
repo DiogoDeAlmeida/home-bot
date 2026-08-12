@@ -122,6 +122,7 @@ public static partial class HubCoreServiceCollectionExtensions
 
         AddHubCapability<Anomalies.AnomalySnoozeCapability>();
         AddHubCapability<Events.JournalPurgeCapability>();
+        AddHubCapability<ServiceRestartCapability>();
         services.AddSingleton(new HubCapabilityCatalog(hubCapabilityTypes));
 
         services.AddSingleton<RefreshCoordinator>();

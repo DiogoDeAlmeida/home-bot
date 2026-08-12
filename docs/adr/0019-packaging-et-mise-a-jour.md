@@ -121,6 +121,35 @@ Deux corrections, non exclusives :
   `TMPDIR`, sur Linux, donc en CI. `AddHubInfrastructure` n'est appelée qu'une fois par processus
   réel (`Program.cs`).
 
+## Décision 5 — une capacité pour redémarrer, et systemd doit relancer un arrêt volontaire
+
+Corollaire direct de la découverte précédente : la configuration Discord n'étant lue qu'au
+démarrage, il fallait un moyen d'appliquer un changement sans console SSH. `hub.service.restart`
+est une capacité du noyau de plus (comme `hub.anomaly.snooze`, `hub.journal.purge`), exposée
+partout (`CapabilityExposure.All`), avec confirmation obligatoire puisqu'elle interrompt le
+service en cours pour tout le monde.
+
+**La réponse doit partir avant l'arrêt.** Le processus qui exécute la capacité est celui qui va
+s'arrêter : `ExecuteAsync` n'appelle pas `IHostApplicationLifetime.StopApplication()`
+elle-même, elle programme l'appel après un court délai (deux secondes), hors du chemin qui
+produit `CapabilityResult`. Sans ce délai, l'arrêt du service Discord dans
+`DiscordGatewayService.ExecuteAsync` (son `finally`, qui ferme la connexion) pourrait couper
+avant que la confirmation n'atteigne les serveurs Discord, et la réponse REST avant que Kestrel
+n'ait fini de l'écrire.
+
+**`Restart=on-failure` ne suffit pas.** Un arrêt volontaire du processus se termine par un code
+de sortie 0 — exactement le même signal qu'un `systemctl stop` explicite aux yeux de systemd, qui
+ne distingue pas qui a demandé l'arrêt, seulement comment le processus s'est terminé.
+`on-failure` ne redémarre jamais un exit 0. `deploy/systemd/homelabhub.service` porte donc
+`Restart=always` à la place : ça reste sûr, parce que systemd n'applique sa politique de
+redémarrage qu'aux arrêts que le *processus* déclenche lui-même — un `systemctl stop` ou
+`disable` explicite, administratif, reste respecté sans redémarrage inattendu.
+
+**`deploy/update.sh` rafraîchit maintenant l'unité systemd à chaque mise à jour**, pas seulement
+à l'installation initiale — fermeture d'un trou que ce correctif a rendu visible : sans ça, une
+version qui compte sur une directive nouvelle dans l'unité (comme `PrivateTmp=true` l'a été) ne
+la trouverait qu'après une réinstallation complète, jamais après une mise à jour normale.
+
 ## Conséquences
 
 - `Directory.Build.props` portait une `RepositoryUrl` erronée (`github.com/diogo/homelab-hub`,

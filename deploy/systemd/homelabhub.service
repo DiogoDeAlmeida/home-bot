@@ -14,11 +14,18 @@ Group=homelabhub
 WorkingDirectory=/opt/homelabhub/current
 ExecStart=/opt/homelabhub/current/homelabhub
 
-# Code de sortie 1 : migration refusée au démarrage (Program.cs, ADR-0007) — un binaire face à
-# un schéma incertain. Redémarrer a une chance de réussir seulement si la cause était
-# transitoire (ex. verrou SQLite pas encore relâché) ; StartLimitBurst borne les tentatives pour
-# qu'un échec systématique s'arrête net plutôt que de boucler indéfiniment en silence.
-Restart=on-failure
+# Restart=always, pas seulement on-failure : hub.service.restart (ADR-0019) arrête le processus
+# proprement (code 0) pour appliquer un changement de configuration qui n'est lu qu'au démarrage
+# (Discord, par exemple) — et on-failure ne relance jamais un arrêt propre, qu'il vienne d'un
+# systemctl stop ou d'un appel interne à StopApplication(), les deux étant indiscernables de son
+# point de vue. Ça reste sûr : systemd n'applique sa politique de redémarrage qu'aux arrêts que
+# le processus déclenche lui-même — un `systemctl stop`/`disable` explicite reste respecté.
+#
+# Code de sortie 1 : migration refusée au démarrage (Program.cs, ADR-0007) — un binaire face à un
+# schéma incertain. Redémarrer a une chance de réussir seulement si la cause était transitoire
+# (ex. verrou SQLite pas encore relâché) ; StartLimitBurst borne les tentatives pour qu'un échec
+# systématique s'arrête net plutôt que de boucler indéfiniment en silence.
+Restart=always
 RestartSec=5
 StartLimitIntervalSec=120
 StartLimitBurst=3
