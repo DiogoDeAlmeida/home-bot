@@ -114,13 +114,19 @@ public static partial class HubCoreServiceCollectionExtensions
             hubCapabilityTypes.Add(typeof(T));
         }
 
+        // Enregistré comme service unique avant les capacités du noyau : JournalPurgeCapability
+        // en dépend directement, pour rejouer la même purge à la demande plutôt que d'en
+        // dupliquer la logique (voir la remarque de RetentionService.Purge).
+        services.AddSingleton<RetentionService>();
+        services.AddHostedService(sp => sp.GetRequiredService<RetentionService>());
+
         AddHubCapability<Anomalies.AnomalySnoozeCapability>();
+        AddHubCapability<Events.JournalPurgeCapability>();
         services.AddSingleton(new HubCapabilityCatalog(hubCapabilityTypes));
 
         services.AddSingleton<RefreshCoordinator>();
         services.AddSingleton<IRefreshCoordinator>(sp => sp.GetRequiredService<RefreshCoordinator>());
         services.AddHostedService<ModuleIngestionService>();
-        services.AddHostedService<RetentionService>();
 
         return services;
     }

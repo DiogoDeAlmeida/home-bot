@@ -21,6 +21,7 @@ public static class HubSettings
     public const string LogLevelKey = "hub.logging.level";
     public const string JournalRetentionDaysKey = "hub.journal.retentionDays";
     public const string JournalMaximumRowsKey = "hub.journal.maxRows";
+    public const string JournalPurgeIntervalHoursKey = "hub.journal.purgeIntervalHours";
     public const string DiscordTokenKey = "hub.discord.token";
     public const string DiscordGuildIdKey = "hub.discord.guildId";
     public const string DiscordDashboardChannelIdKey = "hub.discord.dashboardChannelId";
@@ -58,6 +59,9 @@ public static class HubSettings
                 help: "Les événements plus anciens sont supprimés par la purge quotidienne.")
         .AddInt("journal.maxRows", "Lignes de journal conservées", defaultValue: 100_000,
                 help: "Seconde borne : la première des deux limites atteinte l'emporte.")
+        .AddInt("journal.purgeIntervalHours", "Intervalle entre deux purges (heures)", defaultValue: 24,
+                help: "Relu à chaque passage : réduire cette valeur prend effet sans redémarrage, "
+                      + "utile pour vérifier la purge sans attendre 24 h.")
         .AddSecret("discord.token", "Jeton du bot Discord", required: false,
                    help: "Application dédiée au hub, distincte de Doplarr. Absent : l'adaptateur reste éteint.")
         .AddText("discord.guildId", "ID du serveur Discord", required: false,
