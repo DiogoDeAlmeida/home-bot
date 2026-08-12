@@ -23,9 +23,23 @@ jobs:
         with:
           global-json-file: global.json
 
+      # Sans ça, la cible MSBuild BuildWebUi (HomelabHub.Host.csproj) ne trouve pas npm en
+      # configuration Release et le build .NET échoue sur un exécutable introuvable — un signal
+      # opaque pour ce qui est en réalité un front cassé. La version vient de .node-version, même
+      # source de vérité que le poste de développement (voir docs sur fnm).
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "npm"
+          cache-dependency-path: "web-ui/package-lock.json"
+
       - name: Restauration
         run: dotnet restore
 
+      # En Release, la cible MSBuild BuildWebUi construit web-ui/ (npm ci && npm run build,
+      # qui lance tsc --noEmit avant vite build) avant même de compiler le premier projet .NET :
+      # un front cassé — erreurs de type comprises — fait donc échouer cette étape, pas une
+      # découverte au premier déploiement sur le LXC.
       - name: Build
         run: dotnet build --no-restore -c Release
 
@@ -35,5 +49,4 @@ jobs:
         run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
 
 # À venir :
-#   étape 1 — build du front web-ui/ (npm ci && npm run build) avant le build .NET
 #   étape 6 — release.yml : publication self-contained linux-x64 en asset de release
