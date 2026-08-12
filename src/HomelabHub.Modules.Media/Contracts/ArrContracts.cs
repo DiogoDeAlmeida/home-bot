@@ -81,9 +81,32 @@ public sealed record ArrQueueRecord
     public string? ErrorMessage { get; init; }
 
     /// <summary>
-    /// Même méfiance que <see cref="ErrorMessage"/> : rien ne prouve encore qu'un contenu non
-    /// vide signale un problème. À qualifier quand un import réellement bloqué aura été observé.
+    /// Explication d'un blocage, en clair.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Sémantique établie sur un cas réel</b> (ADR-0015). Sur un import bloqué observé le
+    /// 12 août 2026, ce champ portait la seule explication existante — ni
+    /// <see cref="ErrorMessage"/>, vide, ni l'historique, ni les journaux de Radarr n'en
+    /// gardaient trace :
+    /// </para>
+    /// <code>
+    /// title    : &lt;nom de la release&gt;
+    /// messages : ["Found matching movie via grab history, but release was matched to movie
+    ///             by ID. Manual Import required."]
+    /// </code>
+    /// <para>
+    /// <b>À restituer tel quel, jamais à interpréter.</b> Le contenu est une phrase en anglais
+    /// produite par le service : elle peut changer de formulation d'une version à l'autre, et
+    /// un seul échantillon ne fait pas une taxonomie. La gravité vient de
+    /// <see cref="TrackedDownloadStatus"/>, le texte sert à l'humain qui devra agir.
+    /// </para>
+    /// <para>
+    /// Pour une décision automatisable, la route <c>/api/v3/manualimport?downloadId=</c> expose
+    /// des <c>rejections</c> structurées — vides dans le cas observé, ce qui signifiait que le
+    /// fichier était importable et n'attendait qu'une confirmation.
+    /// </para>
+    /// </remarks>
     public IReadOnlyList<ArrStatusMessage> StatusMessages { get; init; } = [];
 
     // ── Spécifique Radarr ────────────────────────────────────────────────────────────
@@ -103,6 +126,11 @@ public sealed record ArrQueueRecord
     public ArrEpisode? Episode { get; init; }
 }
 
+/// <param name="Title">
+/// Nom de la release concernée — redondant avec le titre de l'entrée de file, ce n'est pas une
+/// catégorie d'erreur.
+/// </param>
+/// <param name="Messages">Explications en clair, destinées à un humain.</param>
 public sealed record ArrStatusMessage(string? Title, IReadOnlyList<string> Messages);
 
 /// <summary>Film joint à l'entrée de file quand <c>includeMovie=true</c>.</summary>

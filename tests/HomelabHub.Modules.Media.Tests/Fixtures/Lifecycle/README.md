@@ -19,6 +19,26 @@ leurs valeurs intéressantes qu'en transition. Ces fixtures sont **une séquence
 | `03`, `16` | 21:37 / 21:43 | Files vides — après import |
 | `20`, `21` | | qBittorrent au repos, puis en téléchargement |
 | `30`, `31` | | Requêtes Seerr, sans puis avec `downloadStatus` |
+| `40`–`43` | 12/08 | **Import bloqué** — file, historique, candidat d'import manuel, torrent |
+
+## L'import bloqué (`40`–`43`)
+
+Capturé le 12 août sur un cas non provoqué : un téléchargement interrompu puis relancé à la main
+dans qBittorrent, contournant le pilotage de Radarr. Il apporte la sémantique de
+`statusMessages`, jusque-là documentée comme inconnue.
+
+```
+trackedDownloadState  : importBlocked      ← valeur jamais observée avant
+trackedDownloadStatus : warning
+errorMessage          : ""                 ← vide
+statusMessages        : ["Found matching movie via grab history, but release was
+                          matched to movie by ID. Manual Import required."]
+```
+
+**C'est la seule source de l'explication** : l'historique ne porte que `grabbed`, et les journaux
+de Radarr n'en gardent aucune trace, à aucun niveau. Le fichier `42` montre par ailleurs que
+`/api/v3/manualimport` renvoyait **zéro rejet** — le fichier était importable et n'attendait
+qu'une confirmation.
 
 ## Le cycle observé
 

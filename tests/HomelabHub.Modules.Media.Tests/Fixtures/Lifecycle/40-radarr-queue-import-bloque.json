@@ -1,0 +1,181 @@
+{
+  "page": 1,
+  "pageSize": 100,
+  "sortKey": "timeleft",
+  "sortDirection": "descending",
+  "totalRecords": 1,
+  "records": [
+    {
+      "movieId": 50,
+      "movie": {
+        "title": "Exemple.Media.15.2024.1080p.WEB-DL-GROUPE",
+        "originalTitle": "Exemple.Media.15.2024.1080p.WEB-DL-GROUPE",
+        "originalLanguage": {
+          "id": 1,
+          "name": "Exemple.Media.14.2024.1080p.WEB-DL-GROUPE"
+        },
+        "alternateTitles": [
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.16.2024.1080p.WEB-DL-GROUPE",
+            "id": 866
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.17.2024.1080p.WEB-DL-GROUPE",
+            "id": 867
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.18.2024.1080p.WEB-DL-GROUPE",
+            "id": 868
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.19.2024.1080p.WEB-DL-GROUPE",
+            "id": 869
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.20.2024.1080p.WEB-DL-GROUPE",
+            "id": 870
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.21.2024.1080p.WEB-DL-GROUPE",
+            "id": 871
+          },
+          {
+            "sourceType": "tmdb",
+            "movieMetadataId": 101,
+            "title": "Exemple.Media.22.2024.1080p.WEB-DL-GROUPE",
+            "id": 872
+          }
+        ],
+        "secondaryYearSourceId": 0,
+        "sortTitle": "Exemple.Media.25.2024.1080p.WEB-DL-GROUPE",
+        "status": "released",
+        "overview": "Exemple.Media.27.2024.1080p.WEB-DL-GROUPE",
+        "inCinemas": "2026-07-24T00:00:00Z",
+        "digitalRelease": "2026-07-25T00:00:00Z",
+        "releaseDate": "2026-07-25T00:00:00Z",
+        "images": [
+          {
+            "coverType": "poster",
+            "remoteUrl": "Exemple.Media.31.2024.1080p.WEB-DL-GROUPE"
+          },
+          {
+            "coverType": "fanart",
+            "remoteUrl": "Exemple.Media.32.2024.1080p.WEB-DL-GROUPE"
+          }
+        ],
+        "website": "Exemple.Media.29.2024.1080p.WEB-DL-GROUPE",
+        "year": 2026,
+        "youTubeTrailerId": "Exemple.Media.30.2024.1080p.WEB-DL-GROUPE",
+        "studio": "Nickelodeon Movies",
+        "path": "Exemple.Media.26.2024.1080p.WEB-DL-GROUPE",
+        "qualityProfileId": 5,
+        "movieFileId": 0,
+        "monitored": true,
+        "minimumAvailability": "released",
+        "isAvailable": true,
+        "folderName": "Exemple.Media.26.2024.1080p.WEB-DL-GROUPE",
+        "runtime": 99,
+        "cleanTitle": "Exemple.Media.24.2024.1080p.WEB-DL-GROUPE",
+        "imdbId": "tt18259538",
+        "tmdbId": 980431,
+        "titleSlug": "Exemple.Media.28.2024.1080p.WEB-DL-GROUPE",
+        "certification": "PG",
+        "genres": [
+          "Animation",
+          "Action",
+          "Adventure",
+          "Fantasy"
+        ],
+        "keywords": [
+          "amused",
+          "anime inspired",
+          "based on tv series",
+          "comforting",
+          "cultural identity",
+          "extinction",
+          "hopeful",
+          "martial arts"
+        ],
+        "tags": [],
+        "added": "2026-08-11T22:04:54Z",
+        "ratings": {
+          "imdb": {
+            "votes": 14866,
+            "value": 7.9,
+            "type": "user"
+          },
+          "tmdb": {
+            "votes": 754,
+            "value": 9.294,
+            "type": "user"
+          }
+        },
+        "collection": {
+          "title": "Exemple.Media.23.2024.1080p.WEB-DL-GROUPE",
+          "tmdbId": 1136366
+        },
+        "popularity": 175.1395,
+        "lastSearchTime": "2026-08-11T22:04:55Z",
+        "id": 50
+      },
+      "languages": [
+        {
+          "id": 2,
+          "name": "Exemple.Media.6.2024.1080p.WEB-DL-GROUPE"
+        }
+      ],
+      "quality": {
+        "quality": {
+          "id": 15,
+          "name": "Exemple.Media.7.2024.1080p.WEB-DL-GROUPE",
+          "source": "webrip",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "customFormats": [],
+      "customFormatScore": 0,
+      "size": 3406311653,
+      "title": "Exemple.Media.1.2024.1080p.WEB-DL-GROUPE",
+      "estimatedCompletionTime": "2026-08-12T09:03:00Z",
+      "added": "2026-08-11T22:04:57Z",
+      "status": "completed",
+      "trackedDownloadStatus": "warning",
+      "trackedDownloadState": "importBlocked",
+      "statusMessages": [
+        {
+          "title": "Exemple.Media.1.2024.1080p.WEB-DL-GROUPE",
+          "messages": [
+            "Found matching movie via grab history, but release was matched to movie by ID. Manual Import required."
+          ]
+        }
+      ],
+      "downloadId": "0101010101010101010101010101010101010101",
+      "protocol": "torrent",
+      "downloadClient": "qBittorrent",
+      "downloadClientHasPostImportCategory": false,
+      "indexer": "Exemple.Media.10.2024.1080p.WEB-DL-GROUPE",
+      "outputPath": "Exemple.Media.2.2024.1080p.WEB-DL-GROUPE",
+      "sizeleft": 0,
+      "timeleft": "00:00:00",
+      "id": 117774610
+    }
+  ]
+}

@@ -178,6 +178,11 @@ public sealed record MediaJourney(
 /// Issue lue dans l'historique, quand l'entrée de file a disparu. <c>null</c> tant que le
 /// téléchargement est encore dans la file.
 /// </param>
+/// <param name="StatusMessages">
+/// Explications en clair fournies par le service, restituées <b>telles quelles</b>. Sur un
+/// import bloqué, c'est la seule source de l'explication — ni l'historique ni les journaux n'en
+/// gardent trace (ADR-0015).
+/// </param>
 public sealed record DownloadItem(
     string DownloadId,
     string? Title,
@@ -188,7 +193,8 @@ public sealed record DownloadItem(
     QBittorrentTorrent? Torrent,
     IReadOnlyList<EpisodeReference> Episodes,
     DateTimeOffset? AddedAt,
-    TerminalOutcome? Terminal)
+    TerminalOutcome? Terminal,
+    IReadOnlyList<string> StatusMessages)
 {
     public double Progress => Size <= 0 ? 0d : Math.Clamp((double)(Size - SizeLeft) / Size, 0d, 1d);
 

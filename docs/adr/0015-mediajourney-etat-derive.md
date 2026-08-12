@@ -124,13 +124,69 @@ Ce raisonnement confirme le choix de câbler l'anomalie sur le déclencheur
 `Manual Interaction Required` plutôt que sur un `importPending` qui traîne.
 
 **3. Méfiance à étendre à `statusMessages`.** `errorMessage` de Radarr n'est pas une erreur : c'est
-un état transitoire que l'API expose sans le qualifier. Rien ne dit que `statusMessages` se
-comporte mieux. **Ne pas présumer qu'un message non vide signifie un problème** tant que le cas
-d'un import réellement bloqué n'aura pas été observé.
+un état transitoire que l'API expose sans le qualifier. Rien ne disait que `statusMessages` se
+comportait mieux, et il est resté inexploité jusqu'à ce qu'un cas réel soit observé.
 
-En attendant cette observation, la détection s'appuie sur le seul signal dont la sémantique est
-établie : `trackedDownloadStatus` différent de `ok`, traité génériquement en avertissement ou en
-erreur, sans interpréter le contenu des messages.
+### Ce cas a eu lieu — 12 août 2026
+
+Un téléchargement interrompu puis relancé à la main dans qBittorrent, en contournant le
+pilotage de Radarr, a produit un import bloqué durable :
+
+```
+status                : completed
+trackedDownloadState  : importBlocked      ← valeur jamais observée jusque-là
+trackedDownloadStatus : warning
+errorMessage          : ""                 ← vide
+statusMessages        : [{
+    title    : <nom de la release>,
+    messages : ["Found matching movie via grab history, but release was matched
+                to movie by ID. Manual Import required."]
+}]
+```
+
+**Trois sources vérifiées, une seule parle :**
+
+| Source | Contenu |
+|---|---|
+| `errorMessage` | vide |
+| `/api/v3/history?downloadId=` | `grabbed` seulement, aucun événement terminal |
+| Journaux Radarr, tous niveaux, 24 h | 19 lignes sur ce titre, **toutes en `info`** et de routine |
+| `statusMessages` | **la seule explication existante** |
+
+### Décision : restituer, jamais interpréter
+
+`statusMessages` est désormais **repris mot pour mot** dans le corps de l'anomalie. Sans lui,
+l'utilisateur lirait « l'import n'a pas abouti » sans savoir quoi faire ; avec lui, il lit
+« Manual Import required » et sait où aller.
+
+Il n'est en revanche **jamais analysé** : pas de recherche de motif, pas de classification. Les
+raisons tiennent en trois points.
+
+1. **Un échantillon ne fait pas une taxonomie.** Un seul cas observé, en dix-huit jours de
+   fonctionnement.
+2. **C'est de la prose anglaise produite par le service**, susceptible de changer de formulation
+   entre deux versions, voire d'être traduite.
+3. **La gravité est déjà portée ailleurs**, par `trackedDownloadStatus`. Analyser le texte
+   n'apporterait qu'une seconde source de vérité, en plus fragile.
+
+Le champ `title` d'un `statusMessage` est le nom de la release, redondant avec celui de l'entrée
+de file : **ce n'est pas une catégorie d'erreur**, et le prendre pour telle serait le premier
+faux pas d'une interprétation mécanique.
+
+### La voie structurée existe, pour plus tard
+
+`/api/v3/manualimport?downloadId=` renvoie les candidats à l'import avec un tableau
+`rejections` **structuré**. Dans le cas observé il était **vide**, et le film correctement
+identifié : le fichier était importable, il n'attendait qu'une confirmation humaine.
+
+C'est là qu'il faudra regarder le jour où l'on voudra qu'une décision soit automatisable — et
+non dans la prose de `statusMessages`.
+
+### Effet de bord vérifié
+
+Le torrent était à 100 % en `stalledUP` depuis des heures, donc « inactif » au sens de
+qBittorrent. Le détecteur de blocage de téléchargement **ne se déclenche pas** pour autant : il
+exige l'état `Downloading`. Confondre les deux produirait deux anomalies pour un seul problème.
 
 ## L'état terminal vient de l'historique, pas de la file
 

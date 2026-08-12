@@ -114,11 +114,20 @@ public static class MediaDetectors
     /// Import en attente.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// <b>Aucun seuil de durée, et ce n'est pas un oubli.</b> Dans le cas nominal, cette fenêtre
     /// dure moins de cinq secondes — mesuré en capture — donc bien moins que l'intervalle de
     /// polling. Le voir au cycle signifie qu'il persiste : l'échantillonnage applique déjà le
     /// seuil, gratuitement. En ajouter un explicite reviendrait à l'appliquer deux fois et à
     /// retarder la détection sans rien gagner (ADR-0015).
+    /// </para>
+    /// <para>
+    /// Le corps reprend <c>statusMessages</c> <b>mot pour mot</b>. Sur le cas réel observé, ce
+    /// champ portait la seule explication existante — « release was matched to movie by ID.
+    /// Manual Import required. » — introuvable ailleurs, ni dans l'historique ni dans les
+    /// journaux. On le restitue sans jamais l'analyser : c'est une phrase du service, pas un
+    /// code d'erreur.
+    /// </para>
     /// </remarks>
     private static void AddImportPending(
         List<HubEvent> events, MediaJourney journey, DownloadItem download, DateTimeOffset now)
@@ -128,13 +137,16 @@ public static class MediaDetectors
             return;
         }
 
+        var explanation = download.StatusMessages.Count > 0
+            ? string.Join(" ", download.StatusMessages)
+            : "Le téléchargement est terminé mais l'import n'a pas abouti.";
+
         events.Add(new HubEvent(
             ModuleKey: "media",
             Type: "media.import.pending",
             Severity: HubEventSeverity.Warning,
             Title: $"Import en attente : {journey.Title ?? journey.Key}",
-            Body: "Le téléchargement est terminé mais l'import n'a pas abouti. "
-                  + "Une intervention manuelle est peut-être requise.",
+            Body: explanation,
             DedupeKey: $"media.import.pending:{download.DownloadId}",
             Data: new Dictionary<string, string>
             {

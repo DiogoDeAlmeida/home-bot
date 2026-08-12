@@ -269,7 +269,13 @@ public static class MediaCorrelator
             Torrent: torrent,
             Episodes: episodes,
             AddedAt: first.Added,
-            Terminal: history.ContainsKey(group.Key) ? terminal : null);
+            Terminal: history.ContainsKey(group.Key) ? terminal : null,
+            // Restitués tels quels, dédupliqués : les 22 entrées d'un pack répètent le même
+            // message. On ne les interprète pas — la gravité vient de trackedDownloadStatus.
+            StatusMessages: [.. group.SelectMany(r => r.StatusMessages)
+                                     .SelectMany(m => m.Messages)
+                                     .Where(m => !string.IsNullOrWhiteSpace(m))
+                                     .Distinct(StringComparer.Ordinal)]);
     }
 
     /// <summary>

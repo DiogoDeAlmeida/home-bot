@@ -32,7 +32,8 @@ public sealed class OverviewTests
             Torrent: null,
             Episodes: [],
             AddedAt: DateTimeOffset.UtcNow,
-            Terminal: null);
+            Terminal: null,
+            StatusMessages: []);
 
         return new MediaJourney(key, MediaKind.Movie, key, null, null, null, [download], state);
     }
@@ -187,5 +188,6 @@ public sealed class OverviewTests
         Torrent: new QBittorrentTorrent { Hash = id, Eta = eta },
         Episodes: [],
         AddedAt: null,
-        Terminal: null);
+        Terminal: null,
+            StatusMessages: []);
 }

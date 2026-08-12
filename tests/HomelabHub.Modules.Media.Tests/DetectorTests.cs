@@ -45,7 +45,8 @@ public sealed class DetectorTests
             },
             Episodes: [],
             AddedAt: Now.Subtract(addedAgo),
-            Terminal: null);
+            Terminal: null,
+            StatusMessages: []);
 
     private static IReadOnlyList<HubEvent> Detect(DownloadItem download) =>
         MediaDetectors.Detect(Snapshot(download), Thresholds, Now);
