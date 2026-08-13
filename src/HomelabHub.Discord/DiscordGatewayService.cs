@@ -230,6 +230,14 @@ internal sealed class DiscordGatewayService(
                 {
                     await channel.ModifyMessageAsync(messageId, props =>
                     {
+                        // Le message existant porte encore le Content texte posté par une
+                        // version antérieure (avant ce passage à Components V2) : Discord refuse
+                        // la requête (50035, Invalid Form Body) si le drapeau IS_COMPONENTS_V2
+                        // est posé sans vider explicitement Content dans la même requête — trouvé
+                        // en conditions réelles, sur le tout premier message édité après la mise
+                        // à jour vers ce rendu. Un message neuf n'a jamais ce problème : Content y
+                        // est absent par construction.
+                        props.Content = string.Empty;
                         props.Components = components;
                         props.Flags = global::Discord.MessageFlags.ComponentsV2;
                     }).ConfigureAwait(false);
