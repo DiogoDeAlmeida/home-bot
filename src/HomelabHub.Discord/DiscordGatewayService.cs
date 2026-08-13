@@ -216,7 +216,11 @@ internal sealed class DiscordGatewayService(
             }
 
             var widgets = await CollectDashboardWidgetsAsync(cancellationToken).ConfigureAwait(false);
-            var content = BuildDashboardContent(widgets);
+
+            // Prototype Components V2 (Discord.Dashboard.DiscordDashboardBuilder), en cours
+            // d'itération sur l'apparence — voir sa remarque XML. À rebasculer sur
+            // BuildDashboardContent/DiscordWidgetRenderer si le style ne convient pas.
+            var components = DiscordDashboardBuilder.Build(widgets);
 
             var messageIdRaw = config.GetValue(HubSettings.DiscordDashboardMessageIdKey);
 
@@ -224,8 +228,11 @@ internal sealed class DiscordGatewayService(
             {
                 try
                 {
-                    await channel.ModifyMessageAsync(messageId, props => props.Content = content)
-                                 .ConfigureAwait(false);
+                    await channel.ModifyMessageAsync(messageId, props =>
+                    {
+                        props.Components = components;
+                        props.Flags = global::Discord.MessageFlags.ComponentsV2;
+                    }).ConfigureAwait(false);
                     return;
                 }
                 // Écrit en toutes lettres : « Discord » nu résoudrait vers notre propre espace
@@ -237,7 +244,9 @@ internal sealed class DiscordGatewayService(
                 }
             }
 
-            var posted = await channel.SendMessageAsync(content).ConfigureAwait(false);
+            var posted = await channel
+                .SendMessageAsync(components: components, flags: global::Discord.MessageFlags.ComponentsV2)
+                .ConfigureAwait(false);
             await config.SetAsync(HubSettings.DiscordDashboardMessageIdKey,
                 posted.Id.ToString(CultureInfo.InvariantCulture), secret: false, cancellationToken)
                         .ConfigureAwait(false);
@@ -364,24 +373,6 @@ internal sealed class DiscordGatewayService(
         }
 
         return [.. payloads.OrderBy(p => p.Order).Select(p => p.Widget)];
-    }
-
-    private static string BuildDashboardContent(IReadOnlyList<WidgetPayload> widgets)
-    {
-        if (widgets.Count == 0)
-        {
-            return "_Aucun widget actif._";
-        }
-
-        var blocks = widgets.Select(DiscordWidgetRenderer.Render);
-
-        // UTC, pas Europe/Paris : le hub raisonne en UTC de bout en bout (ADR-0017) et n'a
-        // aujourd'hui aucune conversion de fuseau. Étiqueté explicitement pour ne pas laisser
-        // croire à une heure locale.
-        var footer = string.Create(CultureInfo.InvariantCulture,
-            $"_Mis à jour à {DateTimeOffset.UtcNow:HH:mm} UTC_");
-
-        return string.Join("\n\n", blocks) + "\n\n" + footer;
     }
 
     private async Task OnSlashCommandAsync(SocketSlashCommand command)
