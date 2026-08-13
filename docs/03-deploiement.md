@@ -3,11 +3,14 @@
 Étape 5 du cadrage. Voir [ADR-0019](adr/0019-packaging-et-mise-a-jour.md) pour les décisions et
 leurs raisons ; ce document est la procédure.
 
-> **Non vérifié en conditions réelles au moment de l'écriture.** Compilé, relu, mais jamais
-> exécuté sur un vrai LXC — exactement le genre d'écart que [CONTRIBUTING.md](../CONTRIBUTING.md)
-> demande de ne pas ignorer. **Avant tout LXC de production**, exercer la chaîne complète
-> (création, installation, premier démarrage, mise à jour, rollback provoqué) sur un LXC jetable
-> créé pour l'occasion. Cette page sera mise à jour une fois cette vérification faite.
+> **Vérifié en conditions réelles sur un LXC jetable Debian 13, partiellement.** `v0.1.3`
+> s'installe et démarre proprement (sections 1 à 3), `hub.service.restart` et
+> `system.backup.create` ont été déclenchées depuis l'interface avec succès (section 6). Deux
+> bugs trouvés et corrigés en route — un `/tmp` en lecture seule sous `ProtectSystem=strict`, puis
+> une boucle de redémarrage due à une description de commande trop longue combinée à
+> `StartLimitBurst` mal placé dans l'unité — voir ADR-0019. **La mise à jour et son rollback
+> provoqué (section 4) restent à tester** : le hub configuré sur ce LXC sert de point de départ
+> pour cet essai, dès qu'une version suivante existe. Cette page sera mise à jour à l'issue.
 
 ## 1. Cible
 

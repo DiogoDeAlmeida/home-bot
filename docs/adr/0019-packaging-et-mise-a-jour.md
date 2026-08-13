@@ -91,19 +91,26 @@ le résultat connu est republié à chaque cycle comme l'exige ADR-0005.
 
 ## Vérifié en conditions réelles
 
-**En cours — deux tentatives, deux découvertes distinctes, toujours pas de passage propre de bout
-en bout.**
+**Installation et premier démarrage : oui. Mise à jour et rollback : pas encore.** Trois passages
+sur des LXC jetables Debian 13, chacun corrigeant ce que le précédent avait révélé — aucun des
+trois bugs ci-dessous n'avait été vu ni en test automatisé ni en relecture :
 
-1. Premier passage sur un LXC jetable Debian 13 : `install.sh` échouait à `POST /api/setup` —
-   `System.IO.IOException: Read-only file system : '/tmp/'`, Data Protection tentant de créer sa
-   première clé via `Path.GetTempFileName()`. Corrigé (Décision 4), retagué `v0.1.2`.
-2. Second passage, sur un LXC jetable neuf : `v0.1.2` a produit une boucle de dix-neuf
-   redémarrages en quelques secondes au lieu de s'installer — deux bugs indépendants (Décision 6).
-   Corrigés.
+1. `install.sh` échouait à `POST /api/setup` — `System.IO.IOException: Read-only file system :
+   '/tmp/'`, Data Protection tentant de créer sa première clé via `Path.GetTempFileName()`.
+   Corrigé (Décision 4), retagué `v0.1.2`.
+2. `v0.1.2` a produit une boucle de dix-neuf redémarrages en quelques secondes au lieu de
+   s'installer — deux bugs indépendants (Décision 6). Corrigés, retagué `v0.1.3`.
+3. `v0.1.3` s'installe et démarre proprement, sans boucle. `hub.service.restart` et
+   `system.backup.create` déclenchées depuis l'interface, toutes deux avec succès — une archive
+   réellement produite.
 
-**Pas encore reconfirmé par une réinstallation complète depuis zéro** — ce que la tendance de
-cette étape suggère justement de ne pas tenir pour acquis avant de l'avoir vu. Cette section sera
-mise à jour à l'issue.
+**Restent non vérifiés : `deploy/update.sh` et son rollback provoqué délibérément** (arrêt du
+service, bascule, cassure volontaire — probablement en renommant le fichier de base juste après
+la bascule — puis vérification que `/healthz` reste rouge et que le script restaure le binaire
+précédent *et* l'archive corrélée à cette tentative précise). Le hub configuré sur le LXC de la
+troisième vérification (Radarr, Sonarr, Seerr, qBittorrent, Discord) est conservé tel quel comme
+point de départ de cet essai, dès qu'une version postérieure à `v0.1.3` existe. Cette section sera
+mise à jour à l'issue — seul ce dernier essai referme complètement cette étape.
 
 ## Décision 4 — TMPDIR ne dépend pas que du durcissement systemd
 

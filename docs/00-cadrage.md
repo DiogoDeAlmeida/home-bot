@@ -148,7 +148,7 @@ envoie un `Referer` correct — les protections CSRF sont supposées aux valeurs
 | **2** | Module média : clients, corrélation, snapshot, REST + SignalR | **fait** |
 | **3** | Dashboard Discord : message persistant, boutons, slash commands | **fait, vérifié en conditions réelles** (ADR-0008) |
 | **4** | Notifications : détecteurs, anomalies, journal consultable | **fait** |
-| **5** | Packaging : publication self-contained, GitHub Actions, scripts LXC, mise à jour | **écrit, non vérifié en conditions réelles** ([ADR-0019](adr/0019-packaging-et-mise-a-jour.md)) |
+| **5** | Packaging : publication self-contained, GitHub Actions, scripts LXC, mise à jour | **installation et premier démarrage vérifiés en conditions réelles** (LXC jetable, `v0.1.3`) — **mise à jour et rollback provoqué restent à tester** ([ADR-0019](adr/0019-packaging-et-mise-a-jour.md)) |
 | **6+** | Module Home Assistant, module Proxmox, absorption de Doplarr | |
 
 Le verrou de premier démarrage, prévu à l'étape 1, a en réalité été livré à l'étape 3
