@@ -103,6 +103,15 @@ trois bugs ci-dessous n'avait été vu ni en test automatisé ni en relecture :
 3. `v0.1.3` s'installe et démarre proprement, sans boucle. `hub.service.restart` et
    `system.backup.create` déclenchées depuis l'interface, toutes deux avec succès — une archive
    réellement produite.
+4. Premier essai de mise à jour, sur ce même LXC : `update: command not found`. `install.sh`
+   plaçait `update.sh` dans `/opt/homelabhub/` mais ne posait aucun raccourci dans le `PATH` —
+   trou resté invisible parce que jusque-là, seule l'installation avait été exercée, jamais la
+   mise à jour, et encore jamais comme un exploitant l'aurait tapée plutôt qu'appelée par son
+   chemin complet. Corrigé : `install.sh` pose désormais `/usr/local/bin/homelabhub-update` (un
+   nom préfixé, pas `update` — générique, il collisionnerait avec ce qu'un administrateur en
+   attend déjà sur Debian), et `update.sh` recrée ce lien à chaque exécution s'il manque, pour
+   que les LXC déjà installés avant ce correctif se réparent d'eux-mêmes à la prochaine mise à
+   jour plutôt que de rester bloqués.
 
 **Restent non vérifiés : `deploy/update.sh` et son rollback provoqué délibérément** (arrêt du
 service, bascule, cassure volontaire — probablement en renommant le fichier de base juste après

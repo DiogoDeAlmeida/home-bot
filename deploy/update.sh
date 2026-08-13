@@ -47,6 +47,12 @@ fi
 
 CURRENT_TAG=$(basename "$(readlink -f "$CURRENT_LINK")")
 
+# Auto-réparation : un LXC installé avant que ce lien n'existe (trouvé en conditions réelles —
+# « update: command not found », la toute première fois que ce script était appelé comme un
+# utilisateur l'aurait fait plutôt que par son chemin complet) le récupère ici, avant même de
+# savoir si la mise à jour elle-même va réussir. Idempotent, donc sans effet une fois en place.
+ln -sf "${INSTALL_ROOT}/update.sh" /usr/local/bin/homelabhub-update
+
 # ── Attente sur /healthz, tolérante à la poignée de main Discord ──────────────────────
 # Voir Program.cs (ADR-0019) : juste après un démarrage, l'état « Connecting » est normal le
 # temps que la passerelle Discord s'établisse, et /healthz le rapporte comme dégradé. 90 s à

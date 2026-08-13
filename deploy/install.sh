@@ -120,6 +120,12 @@ curl -fsSL -o "${INSTALL_ROOT}/update.sh" \
   "https://raw.githubusercontent.com/${REPO}/${TARGET_TAG}/deploy/update.sh"
 chmod +x "${INSTALL_ROOT}/update.sh"
 
+# Un raccourci dans le PATH, préfixé plutôt que générique : « update » collisionnerait avec ce
+# qu'un administrateur attend déjà de ce mot sur un système Debian. Sans ce lien, la seule façon
+# d'appeler le script est son chemin complet — jamais exercé comme un utilisateur le ferait avant
+# la première mise à jour réelle sur un LXC, où le trou a été trouvé.
+ln -sf "${INSTALL_ROOT}/update.sh" /usr/local/bin/homelabhub-update
+
 # ── Vérification du premier démarrage ──────────────────────────────────────────────────
 # Fenêtre de tolérance : juste après un démarrage, la passerelle Discord passe par l'état
 # « Connecting » le temps de sa poignée de main, ce que /healthz rapporte comme dégradé

@@ -71,13 +71,19 @@ signale comme n'importe quelle autre anomalie — dans Discord, dans le journal 
 déclencher.
 
 ```bash
-sudo /opt/homelabhub/update.sh              # dernière version
-sudo /opt/homelabhub/update.sh v0.3.0       # version précise
+sudo homelabhub-update              # dernière version
+sudo homelabhub-update v0.3.0       # version précise
 ```
 
-`update.sh` n'est pas dans l'archive de release : `install.sh` le dépose à côté du binaire lors
-de l'installation initiale, et chaque mise à jour réussie le remplace par la copie correspondant
-à la version qu'elle vient de déployer — l'outil reste toujours aligné sur ce qu'il gère.
+`update.sh` n'est pas dans l'archive de release : `install.sh` le dépose dans
+`/opt/homelabhub/update.sh` lors de l'installation initiale, et chaque mise à jour réussie le
+remplace par la copie correspondant à la version qu'elle vient de déployer — l'outil reste
+toujours aligné sur ce qu'il gère. `install.sh` pose aussi un lien symbolique
+(`/usr/local/bin/homelabhub-update`), préfixé plutôt qu'un `update` générique qui collisionnerait
+avec ce qu'un administrateur en attend déjà sur un système Debian. `update.sh` recrée ce lien à
+chaque exécution s'il manque — un LXC installé avant l'ajout de cette étape se répare tout seul à
+la prochaine mise à jour, sans réinstallation. Le chemin complet
+(`sudo /opt/homelabhub/update.sh`) fonctionne toujours, avec ou sans le lien.
 
 Ce que fait [`deploy/update.sh`](../deploy/update.sh) :
 
@@ -100,7 +106,7 @@ Ce que fait [`deploy/update.sh`](../deploy/update.sh) :
 Rollback manuel, hors d'une mise à jour en cours :
 
 ```bash
-sudo /opt/homelabhub/update.sh --rollback
+sudo homelabhub-update --rollback
 ```
 
 ## 5. `/healthz`
